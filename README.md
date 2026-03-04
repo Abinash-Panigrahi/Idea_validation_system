@@ -90,6 +90,8 @@ python main.py
 ```bash
 streamlit run app.py
 ```
+### Option 3 — Live Demo
+🌐 [Try it here](https://ideavalidationsystem-eyvfi388xtmk5shgmggxt7.streamlit.app/)
 
 ---
 
