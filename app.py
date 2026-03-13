@@ -6,7 +6,7 @@ Run with: streamlit run app.py
 import streamlit as st
 from analyzer import (
     validate_input,
-    generate_followup_questions,
+    generate_single_question,
     analyze_idea,
     grade_output
 )
@@ -46,6 +46,18 @@ with st.sidebar:
 
 # ─── Session State ────────────────────────────────────────────────────────────
 
+if "idea_stage" not in st.session_state:
+    st.session_state.idea_stage = ""
+
+if "target_market" not in st.session_state:
+    st.session_state.target_market = ""
+
+if "team_status" not in st.session_state:
+    st.session_state.team_status = ""
+
+if "budget" not in st.session_state:
+    st.session_state.budget = ""
+
 if "step" not in st.session_state:
     st.session_state.step = 1
 
@@ -66,6 +78,15 @@ if "followup_qa" not in st.session_state:
 
 if "analysis" not in st.session_state:
     st.session_state.analysis = None
+
+if "current_question_index" not in st.session_state:
+    st.session_state.current_question_index = 0
+
+if "answers_history" not in st.session_state:
+    st.session_state.answers_history = []
+
+if "founder_question_index" not in st.session_state:
+    st.session_state.founder_question_index = 0
 
 
 # ─── Step 1: Idea Input ───────────────────────────────────────────────────────
@@ -98,65 +119,201 @@ if st.session_state.step == 1:
 # ─── Step 2: Founder Information ─────────────────────────────────────────────
 
 if st.session_state.step == 2:
-    st.header("👤 Step 2: Tell Us About Yourself")
+    st.header("👤 Step 2: Founder Information")
     st.divider()
 
-    founder_name = st.text_input(
-        "What is your name?",
-        placeholder="e.g. Rahul"
-    )
+    fq_index = st.session_state.founder_question_index
 
-    background = st.radio(
-        "What is your background?",
-        options=["Technical", "Non-Technical", "Other"]
-    )
+    # ── Field 0: Name ──
+    if fq_index == 0:
+        st.write("**What is your name?**")
+        founder_name = st.text_input("Your name:", key="input_name")
+        if st.button("Next →", key="fq_btn_0"):
+            if not founder_name.strip():
+                st.error("❌ Please enter your name!")
+            else:
+                st.session_state.founder_name = founder_name
+                st.session_state.founder_question_index = 1
+                st.rerun()
 
-    if st.button("Next →", key="btn_step2"):
-        if not founder_name.strip():
-            st.error("❌ Please enter your name!")
-        else:
-            st.session_state.founder_name = founder_name
-            st.session_state.background = background
-            st.session_state.step = 3
-            st.rerun()
+    # ── Field 1: Background ──
+    elif fq_index == 1:
+        st.write("**What is your background?**")
+        background = st.selectbox(
+            "Select your background:",
+            ["Select...", "Technical", "Non-Technical", "Other"],
+            key="input_background"
+        )
+        if st.button("Next →", key="fq_btn_1"):
+            if background == "Select...":
+                st.error("❌ Please select your background!")
+            else:
+                st.session_state.background = background
+                st.session_state.founder_question_index = 2
+                st.rerun()
+
+    # ── Field 2: Idea Stage ──
+    elif fq_index == 2:
+        st.write("**What stage is your idea at?**")
+        idea_stage = st.selectbox(
+            "Select your stage:",
+            [
+                "Select...",
+                "Just an idea (thinking stage)",
+                "Already researched",
+                "Building MVP",
+                "Already have users"
+            ],
+            key="input_stage"
+        )
+        if st.button("Next →", key="fq_btn_2"):
+            if idea_stage == "Select...":
+                st.error("❌ Please select your idea stage!")
+            else:
+                st.session_state.idea_stage = idea_stage
+                st.session_state.founder_question_index = 3
+                st.rerun()
+
+    # ── Field 3: Target Market ──
+    elif fq_index == 3:
+        st.write("**What is your target market?**")
+        target_market = st.selectbox(
+            "Select your target market:",
+            [
+                "Select...",
+                "Local (city level)",
+                "India",
+                "Global"
+            ],
+            key="input_market"
+        )
+        if st.button("Next →", key="fq_btn_3"):
+            if target_market == "Select...":
+                st.error("❌ Please select your target market!")
+            else:
+                st.session_state.target_market = target_market
+                st.session_state.founder_question_index = 4
+                st.rerun()
+
+    # ── Field 4: Team Status ──
+    elif fq_index == 4:
+        st.write("**What is your team status?**")
+        team_status = st.selectbox(
+            "Select your team status:",
+            [
+                "Select...",
+                "Solo founder",
+                "Have co-founder",
+                "Have small team"
+            ],
+            key="input_team"
+        )
+        if st.button("Next →", key="fq_btn_4"):
+            if team_status == "Select...":
+                st.error("❌ Please select your team status!")
+            else:
+                st.session_state.team_status = team_status
+                st.session_state.founder_question_index = 5
+                st.rerun()
+
+    # ── Field 5: Budget ──
+    elif fq_index == 5:
+        st.write("**What is your available budget?**")
+        budget = st.selectbox(
+            "Select your budget:",
+            [
+                "Select...",
+                "No budget (Bootstrapped)",
+                "Under ₹1 lakh",
+                "₹1-10 lakh",
+                "Above ₹10 lakh"
+            ],
+            key="input_budget"
+        )
+        if st.button("Next →", key="fq_btn_5"):
+            if budget == "Select...":
+                st.error("❌ Please select your budget!")
+            else:
+                st.session_state.budget = budget
+                st.session_state.founder_question_index = 0  # reset for next time
+                st.session_state.step = 3
+                st.rerun()
 
 
-# ─── Step 3: Follow-up Questions ─────────────────────────────────────────────
+# ─── Step 3: Adaptive Questions ──────────────────────────────────────────────
 
 if st.session_state.step == 3:
-    st.header("❓ Step 3: Follow-up Questions")
+    st.header("❓ Step 3: Let's Talk About Your Idea!")
     st.divider()
 
-    if not st.session_state.questions:
-        with st.spinner("⏳ Generating questions based on your idea..."):
-            questions = generate_followup_questions(
+    current_index = st.session_state.current_question_index
+    history = st.session_state.answers_history
+
+    # Generate current question if not already generated
+    if len(st.session_state.questions) <= current_index:
+        with st.spinner(f"⏳ Thinking..."):
+            question = generate_single_question(
                 st.session_state.idea,
                 st.session_state.founder_name,
-                st.session_state.background
+                st.session_state.background,
+                st.session_state.idea_stage,
+                st.session_state.target_market,
+                st.session_state.team_status,
+                st.session_state.budget,
+                history
             )
-            st.session_state.questions = questions
+            st.session_state.questions.append(question)
 
-    answers = []
+    # Show current question
+    current_question = st.session_state.questions[current_index]
 
-    for i, question in enumerate(st.session_state.questions):
-        answer = st.text_area(
-            f"Q{i+1}: {question}",
-            height=100,
-            key=f"answer_{i}"
-        )
-        answers.append(answer)
+    st.divider()
+    st.write(f"### 💬 {current_question}")
+    st.write("")
+    st.write("*You can type your answer below or click 'I Don't Know' if you are unsure!*")
 
-    if st.button("Analyze My Idea 🚀", key="btn_step3"):
-        if any(not a.strip() for a in answers):
-            st.error("❌ Please answer all questions!")
+    answer = st.text_area(
+        "Your Answer:",
+        height=120,
+        key=f"answer_{current_index}",
+        placeholder="Type your answer here... don't worry, there are no wrong answers!"
+    )
+
+    st.write("**OR**")
+
+    # ── Helper Function ──
+    def save_and_next(ans):
+        st.session_state.answers_history.append({
+            "question": current_question,
+            "answer": ans
+        })
+        if current_index < 3:
+            st.session_state.current_question_index += 1
         else:
-            followup_qa = [
-                {"question": q, "answer": a}
-                for q, a in zip(st.session_state.questions, answers)
-            ]
-            st.session_state.followup_qa = followup_qa
+            st.session_state.followup_qa = st.session_state.answers_history
             st.session_state.step = 4
-            st.rerun()
+        st.rerun()
+
+    # ── Buttons ──
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if current_index < 3:
+            if st.button("Next →", key=f"btn_q{current_index}", use_container_width=True):
+                if not answer.strip():
+                    st.error("❌ Please type your answer or click I Don't Know!")
+                else:
+                    save_and_next(answer)
+        else:
+            if st.button("Analyze My Idea 🚀", key="btn_analyze", use_container_width=True):
+                if not answer.strip():
+                    st.error("❌ Please type your answer or click I Don't Know!")
+                else:
+                    save_and_next(answer)
+
+    with col2:
+        if st.button("🤷 I Don't Know", key=f"btn_idk_{current_index}", use_container_width=True):
+            save_and_next("I don't know")
 
 
 # ─── Step 4: Analysis & Results ──────────────────────────────────────────────
@@ -177,6 +334,10 @@ if st.session_state.step == 4:
                     st.session_state.idea,
                     st.session_state.founder_name,
                     st.session_state.background,
+                    st.session_state.idea_stage,
+                    st.session_state.target_market,
+                    st.session_state.team_status,
+                    st.session_state.budget,
                     st.session_state.followup_qa
                 )
                 grade = grade_output(analysis)
@@ -196,7 +357,14 @@ if st.session_state.step == 4:
                 st.rerun()
             
             st.stop()
-    
+
+            analysis["founder_profile"] = {
+            "background": st.session_state.background,
+            "idea_stage": st.session_state.idea_stage,
+            "target_market": st.session_state.target_market,
+            "team_status": st.session_state.team_status,
+            "budget": st.session_state.budget
+        }
         st.session_state.analysis = analysis
 
     analysis = st.session_state.analysis

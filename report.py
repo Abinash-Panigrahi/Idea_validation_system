@@ -54,6 +54,7 @@ def generate_markdown(analysis: dict) -> str:
 
     scores = analysis["scores"]
     overall = analysis["overall"]
+    profile = analysis.get("founder_profile", {})
     problem = analysis["problem_statement"]
     solution = analysis["proposed_solution"]
     innovation = analysis["core_innovation"]
@@ -65,6 +66,16 @@ def generate_markdown(analysis: dict) -> str:
 Generated: {timestamp}
 Founder: {analysis["founder_name"]}
 Idea: {analysis["idea_summary"]}
+
+---
+
+## 👤 Founder Profile
+- **Name:** {analysis["founder_name"]}
+- **Background:** {profile.get("background", "N/A")}
+- **Idea Stage:** {profile.get("idea_stage", "N/A")}
+- **Target Market:** {profile.get("target_market", "N/A")}
+- **Team Status:** {profile.get("team_status", "N/A")}
+- **Budget:** {profile.get("budget", "N/A")}
 
 ---
 

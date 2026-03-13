@@ -9,10 +9,10 @@ import json
 import google.generativeai as genai
 from dotenv import load_dotenv
 from prompts import (
-    get_followup_questions_prompt,
     get_analysis_prompt,
     get_validate_input_prompt,
-    get_grade_output_prompt
+    get_grade_output_prompt,
+    get_adaptive_question_prompt
 )
 
 load_dotenv()
@@ -82,26 +82,28 @@ def validate_input(idea: str) -> dict:
         result = {"status": "INVALID", "reason": "AI formatting failed"}
     return result
 
-
-def generate_followup_questions(idea: str, founder_name: str, background: str) -> list:
-    prompt = get_followup_questions_prompt(idea, founder_name, background)
+def generate_single_question(idea: str, founder_name: str, background: str,
+                              idea_stage: str, target_market: str,
+                              team_status: str, budget: str, history: list) -> str:
+    prompt = get_adaptive_question_prompt(idea, founder_name, background,
+                                          idea_stage, target_market,
+                                          team_status, budget, history)
     raw_response = call_gemini(prompt, max_output_tokens=2048)
     cleaned = clean_json(raw_response)
     try:
         result = json.loads(cleaned)
     except json.JSONDecodeError as e:
         print(f"\n⚠️ AI Formatting Error: {e}")
-        result = {"questions": [
-            "What problem are you solving?",
-            "Who is your target customer?",
-            "How will you generate revenue?",
-            "Who are your competitors?"
-        ]}
-    return result["questions"]
+        print("Raw response:", cleaned[:200])
+        result = {"question": "Can you explain more about your target market?"}
+    return result["question"]
 
-
-def analyze_idea(idea: str, founder_name: str, background: str, followup_qa: list) -> dict:
-    prompt = get_analysis_prompt(idea, founder_name, background, followup_qa)
+def analyze_idea(idea: str, founder_name: str, background: str,
+                  idea_stage: str, target_market: str,
+                  team_status: str, budget: str, followup_qa: list) -> dict:
+    prompt = get_analysis_prompt(idea, founder_name, background,
+                                  idea_stage, target_market,
+                                  team_status, budget, followup_qa)
     raw_response = call_gemini(prompt, max_output_tokens=8192)
     cleaned = clean_json(raw_response)
     try:
