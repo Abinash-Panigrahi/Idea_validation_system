@@ -71,11 +71,21 @@ Idea: {analysis["idea_summary"]}
 
 ## 👤 Founder Profile
 - **Name:** {analysis["founder_name"]}
+- **Age:** {profile.get("age", "N/A")}
+- **Location:** {profile.get("location", "N/A")}
 - **Background:** {profile.get("background", "N/A")}
-- **Idea Stage:** {profile.get("idea_stage", "N/A")}
-- **Target Market:** {profile.get("target_market", "N/A")}
-- **Team Status:** {profile.get("team_status", "N/A")}
-- **Budget:** {profile.get("budget", "N/A")}
+- **Specific Field:** {profile.get("sub_field", "N/A")}
+- **Role / Level:** {profile.get("role_level", "N/A")}
+- **Skills:** {profile.get("skills", "N/A")}
+- **Startup Experience:** {profile.get("startup_exp", "N/A")}
+- **Talked to Users:** {profile.get("user_validation", "N/A")}
+- **Industry Network:** {profile.get("industry_network", "N/A")}
+- **Available Time:** {profile.get("available_time", "N/A")}
+- **Main Goal:** {profile.get("main_goal", "N/A")}
+- **Motivation:** {profile.get("motivation", "N/A")}
+- **Already Tried:** {profile.get("already_tried", "N/A")}
+- **Biggest Fear:** {profile.get("biggest_fear", "N/A")}
+- **About Themselves:** {profile.get("about_self", "N/A")}
 
 ---
 
@@ -108,12 +118,12 @@ Idea: {analysis["idea_summary"]}
 ## 5️⃣ Scores (1-10)
 | Category | Score | Reasoning |
 |----------|-------|-----------|
-| Market Feasibility | {scores["market_feasibility"]["score"]}/10 | {scores["market_feasibility"]["reasoning"]} |
-| Marketing Potential | {scores["marketing_potential"]["score"]}/10 | {scores["marketing_potential"]["reasoning"]} |
-| Scalability | {scores["scalability"]["score"]}/10 | {scores["scalability"]["reasoning"]} |
-| Revenue Potential | {scores["revenue_potential"]["score"]}/10 | {scores["revenue_potential"]["reasoning"]} |
-| Technical Complexity | {scores["technical_complexity"]["score"]}/10 | {scores["technical_complexity"]["reasoning"]} |
-| Execution Risk | {scores["execution_risk"]["score"]}/10 | {scores["execution_risk"]["reasoning"]} |
+| Market Feasibility | {scores.get("market_feasibility", {}).get("score", "N/A")}/10 | {scores.get("market_feasibility", {}).get("reasoning", "N/A")} |
+| Marketing Potential | {scores.get("marketing_potential", {}).get("score", "N/A")}/10 | {scores.get("marketing_potential", {}).get("reasoning", "N/A")} |
+| Scalability | {scores.get("scalability", {}).get("score", "N/A")}/10 | {scores.get("scalability", {}).get("reasoning", "N/A")} |
+| Revenue Potential | {scores.get("revenue_potential", {}).get("score", "N/A")}/10 | {scores.get("revenue_potential", {}).get("reasoning", "N/A")} |
+| Technical Complexity | {scores.get("technical_complexity", {}).get("score", "N/A")}/10 | {scores.get("technical_complexity", {}).get("reasoning", "N/A")} |
+| Execution Risk | {scores.get("execution_risk", {}).get("score", "N/A")}/10 | {scores.get("execution_risk", {}).get("reasoning", "N/A")} |
 
 ---
 

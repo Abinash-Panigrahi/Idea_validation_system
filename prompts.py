@@ -6,9 +6,7 @@ No API calls happen here — just text building.
 
 import json
 
-def get_adaptive_question_prompt(idea: str, founder_name: str, background: str, 
-                                  idea_stage: str, target_market: str, 
-                                  team_status: str, budget: str, history: list) -> str:
+def get_adaptive_question_prompt(idea: str, founder_name: str, founder_data: dict, history: list) -> str:
     history_text = ""
     if history:
         history_text = "\n".join([
@@ -48,11 +46,21 @@ Short sentences. Easy to understand. Always encouraging.
 
 <founder_info>
 Name: {founder_name}
-Background: {background}
-Idea Stage: {idea_stage}
-Target Market: {target_market}
-Team Status: {team_status}
-Available Budget: {budget}
+Age: {founder_data.get('age', 'Not specified')}
+Location: {founder_data.get('location', 'Not specified')}
+Background: {founder_data.get('background', 'Not specified')}
+Specific Field: {founder_data.get('sub_field', 'Not specified')}
+Role / Level: {founder_data.get('role_level', 'Not specified')}
+Skills: {founder_data.get('skills', 'Not specified')}
+Startup Experience: {founder_data.get('startup_exp', 'Not specified')}
+Talked to Users: {founder_data.get('user_validation', 'Not specified')}
+Industry Network: {founder_data.get('industry_network', 'Not specified')}
+Available Time: {founder_data.get('available_time', 'Not specified')}
+Main Goal: {founder_data.get('main_goal', 'Not specified')}
+Why This Idea: {founder_data.get('motivation', 'Not specified')}
+Already Tried: {founder_data.get('already_tried', 'Not specified')}
+Biggest Fear: {founder_data.get('biggest_fear', 'Not specified')}
+About Themselves: {founder_data.get('about_self', 'Not specified')}
 </founder_info>
 
 <startup_idea>
@@ -151,9 +159,7 @@ Respond ONLY in this exact JSON format:
 </instructions>
 """
 
-def get_analysis_prompt(idea: str, founder_name: str, background: str,
-                         idea_stage: str, target_market: str,
-                         team_status: str, budget: str, followup_qa: list) -> str:
+def get_analysis_prompt(idea: str, founder_name: str, founder_data: dict, followup_qa: list) -> str:
     qa_text = "\n".join([
         f"Q: {item['question']}\nA: {item['answer']}"
         for item in followup_qa
@@ -166,11 +172,22 @@ You are a world-class startup analyst and investor.
 
 <founder_info>
 Name: {founder_name}
-Background: {background}
-Idea Stage: {idea_stage}
-Target Market: {target_market}
-Team Status: {team_status}
-Available Budget: {budget}
+Age: {founder_data.get('age', 'Not specified')}
+Location: {founder_data.get('location', 'Not specified')}
+Background: {founder_data.get('background', 'Not specified')}
+Specific Field: {founder_data.get('sub_field', 'Not specified')}
+Role / Level: {founder_data.get('role_level', 'Not specified')}
+Skills: {founder_data.get('skills', 'Not specified')}
+Real World Experience: {founder_data.get('real_world_exp', 'Not specified')}
+Startup Experience: {founder_data.get('startup_exp', 'Not specified')}
+Talked to Real Users: {founder_data.get('user_validation', 'Not specified')}
+Industry Network: {founder_data.get('industry_network', 'Not specified')}
+Available Time: {founder_data.get('available_time', 'Not specified')}
+Main Goal: {founder_data.get('main_goal', 'Not specified')}
+Why This Idea: {founder_data.get('motivation', 'Not specified')}
+Already Tried: {founder_data.get('already_tried', 'Not specified')}
+Biggest Fear: {founder_data.get('biggest_fear', 'Not specified')}
+About Themselves: {founder_data.get('about_self', 'Not specified')}
 </founder_info>
 
 <startup_idea>
@@ -194,6 +211,23 @@ Founder background rules:
 - If Target market = Global → suggest starting local first then expanding
 - If Idea Stage = Just an idea → focus on validation steps
 - If Already have users → highlight traction as biggest strength
+- If founder age is Under 18 or 18-22 → use very simple language, focus on learning first steps
+- If founder location is India → suggest Indian market first, mention Indian regulations, suggest Indian tools and resources
+- If founder has strong skills → suggest they can build MVP themselves, save cost
+- If founder has no skills → suggest no-code tools first, or finding technical co-founder
+- If founder motivation is personal problem → highlight this as biggest strength, validates real need
+- If founder already tried something → acknowledge effort, build on what they tried
+- If founder has industry network → highlight this as major advantage, suggest leveraging it
+- If founder has no network → suggest first steps to build one
+- If founder biggest fear is competition → address it directly in market landscape section
+- If founder biggest fear is technical → address it in tech stack section with simple options
+- If founder available time is Very Limited → suggest micro-steps, weekend-friendly roadmap
+- If founder available time is Full Time → suggest aggressive timeline, faster MVP
+- If founder main goal is Portfolio → focus on learning and showcase-worthy output
+- If founder main goal is Social Impact → focus on impact metrics, suggest NGO/grant funding
+- If founder startup experience is failed before → treat as strength, they have real world learning
+- If founder talked to real users already → treat as validation, highlight it as traction
+- If founder real world experience exists → use that context to suggest practical first steps
 
 Answer quality rules:
 - If founder gave strong answers → treat them as capable, give detailed roadmap
@@ -224,10 +258,17 @@ Most important rules:
 - If competition level is High AND no clear differentiation exists →scalability and revenue scores must not exceed 5!
 
 Language rules:
-- Use language appropriate for a {background} founder
-- If Non-Technical → avoid jargon, use simple terms
-- If Technical → use technical terms where helpful
-- Always sound like a supportive friend who knows business!
+- Age Under 18 or 18-22 → very simple words, short sentences, encouraging tone
+- Age 28+ → professional tone, respect their experience
+- Location India → mention Indian market size, Indian competitors, Indian regulations
+- Background Technical → use technical terms where helpful, focus on business side gaps
+- Background Non-Technical → zero jargon, explain everything simply, focus on execution
+- Background Student → extra encouraging, treat idea as learning journey
+- Background Complete Beginner → simplest possible language, baby steps only
+- Background Self Taught → respect their hustle, practical suggestions only
+- Main Goal Portfolio → frame everything as skill building and showcase
+- Main Goal Social Impact → frame everything around impact and community
+- Always sound like a supportive friend who knows business and genuinely cares!
 
 Do not use LaTeX or any math notation. Use plain text only.
 

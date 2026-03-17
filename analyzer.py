@@ -82,12 +82,8 @@ def validate_input(idea: str) -> dict:
         result = {"status": "INVALID", "reason": "AI formatting failed"}
     return result
 
-def generate_single_question(idea: str, founder_name: str, background: str,
-                              idea_stage: str, target_market: str,
-                              team_status: str, budget: str, history: list) -> str:
-    prompt = get_adaptive_question_prompt(idea, founder_name, background,
-                                          idea_stage, target_market,
-                                          team_status, budget, history)
+def generate_single_question(idea: str, founder_name: str, founder_data: dict, history: list) -> str:
+    prompt = get_adaptive_question_prompt(idea, founder_name, founder_data, history)
     raw_response = call_gemini(prompt, max_output_tokens=2048)
     cleaned = clean_json(raw_response)
     try:
@@ -96,14 +92,10 @@ def generate_single_question(idea: str, founder_name: str, background: str,
         print(f"\n⚠️ AI Formatting Error: {e}")
         print("Raw response:", cleaned[:200])
         result = {"question": "Can you explain more about your target market?"}
-    return result["question"]
+    return result.get("question", "Could you tell me a little more about your idea?")
 
-def analyze_idea(idea: str, founder_name: str, background: str,
-                  idea_stage: str, target_market: str,
-                  team_status: str, budget: str, followup_qa: list) -> dict:
-    prompt = get_analysis_prompt(idea, founder_name, background,
-                                  idea_stage, target_market,
-                                  team_status, budget, followup_qa)
+def analyze_idea(idea: str, founder_name: str, founder_data: dict, followup_qa: list) -> dict:
+    prompt = get_analysis_prompt(idea, founder_name, founder_data, followup_qa)
     raw_response = call_gemini(prompt, max_output_tokens=8192)
     cleaned = clean_json(raw_response)
     try:
