@@ -275,17 +275,26 @@ Do not use LaTeX or any math notation. Use plain text only.
 Respond ONLY in this exact JSON format, no extra text outside JSON:
 {{
   "founder_name": "{founder_name}",
-  "idea_summary": "one line summary",
+  "idea_summary": "one line — what the idea IS, not why it works",
 
   "problem_statement": {{
-    "description": "clear simple description",
-    "target_audience": "who faces this problem",
-    "why_current_solutions_fail": "why existing solutions are not enough"
+    "description": "clear simple description in 2 lines",
+    "target_audience": "who faces this problem — 1 line",
+    "why_current_solutions_fail": "why existing solutions are not enough — 1 line",
+    "real_world_example": "a short real story like imagine a person named X from their city who faces this daily — 2 lines only",
+    "pain_points": ["exact pain point 1", "exact pain point 2", "exact pain point 3 — add up to 5 if needed"],
+    "who_suffers_most": "the most specific group that feels this pain the hardest — 1 line",
+    "current_workarounds": "what people do today to handle this problem even if badly — 1 line",
+    "market_size_hint": "simple estimate of how many people face this in India or globally — 1 line",
+    "how_long_problem_exists": "has this problem existed for years or is it new — 1 line"
   }},
 
   "proposed_solution": {{
-    "what_is_built": "what exactly is being built in simple words",
-    "how_it_solves": "how it solves the problem simply"
+    "simple_explanation": "explain the solution like explaining to a 10 year old — 2 lines only",
+    "step_by_step_how_it_works": ["step 1 — what user does first", "step 2", "step 3 — add up to 5 steps if needed"],
+    "key_features": ["feature 1 — 1 line", "feature 2 — 1 line", "feature 3 — add up to 5 if needed"],
+    "unfair_advantage": "what this founder has that others dont — 1 line",
+    "one_line_pitch": "one sentence — what it does + who it helps + why it works"
   }},
 
   "core_innovation": {{
@@ -392,5 +401,113 @@ After thinking, respond ONLY in this exact JSON format:
   "quality_score": 1 to 5,
   "feedback": "maximum 10 words only, integer score only"
 }}
+</instructions>
+"""
+
+
+def get_readiness_tips_prompt(analysis: dict, readiness_type: str) -> str:
+    
+    founder_name = analysis.get("founder_name", "the founder")
+    idea_summary = analysis.get("idea_summary", "not specified")
+    overall = analysis.get("overall", {})
+    scores = analysis.get("scores", {})
+    problem = analysis.get("problem_statement", {})
+    solution = analysis.get("proposed_solution", {})
+    founder_profile = analysis.get("founder_profile", {})
+
+    scores_text = "\n".join([
+        f"- {k.replace('_', ' ').title()}: {v.get('score', 'N/A')}/10 — {v.get('reasoning', '')}"
+        for k, v in scores.items()
+    ])
+
+    if readiness_type == "mvp":
+        type_instruction = """
+Your job is to tell this founder EXACTLY what they need to do to make their idea MVP ready.
+
+MVP means — the smallest possible working version of the product that real users can actually use and give feedback on.
+
+Generate tips that are:
+- Specific to THIS idea — not generic advice
+- Simple enough for this founder to understand and act on
+- Honest about what is missing right now
+- Encouraging — every problem has a solution!
+
+Respond ONLY in this exact JSON format:
+{
+  "what_it_means": "explain what MVP means specifically for THIS idea in 2 simple lines",
+  "why_not_ready": ["reason 1", "reason 2", "reason 3"],
+  "steps_to_become_ready": ["step 1", "step 2", "step 3", "step 4", "step 5"],
+  "realistic_timeline": "honest simple timeline like 4-6 weeks if they work part time",
+  "first_action": "the ONE thing they should do tomorrow morning to start"
+}
+"""
+    else:
+        type_instruction = """
+Your job is to tell this founder EXACTLY what they need to do to make their idea investment ready.
+
+Investment ready means — the idea is structured, validated and promising enough that an investor would consider putting money into it.
+
+Generate tips that are:
+- Specific to THIS idea — not generic advice
+- Simple enough for this founder to understand and act on
+- Honest about what is missing right now
+- Encouraging — every problem has a solution!
+
+Respond ONLY in this exact JSON format:
+{
+  "what_it_means": "explain what investment ready means specifically for THIS idea in 2 simple lines",
+  "why_not_ready": ["reason 1", "reason 2", "reason 3"],
+  "steps_to_become_ready": ["step 1", "step 2", "step 3", "step 4", "step 5"],
+  "what_investors_look_for": ["thing 1", "thing 2", "thing 3", "thing 4"],
+  "realistic_timeline": "honest simple timeline like 3-6 months if they work consistently",
+  "first_action": "the ONE thing they should do tomorrow morning to start"
+}
+"""
+
+    return f"""
+<role>
+You are a warm and honest startup mentor.
+You genuinely want this founder to succeed.
+You give specific, actionable, simple advice.
+You never give fake praise — but always stay encouraging.
+Do not use LaTeX or any math notation. Use plain text only.
+</role>
+
+<founder_info>
+Name: {founder_name}
+Background: {founder_profile.get("background", "not specified")}
+Age: {founder_profile.get("age", "not specified")}
+Location: {founder_profile.get("location", "not specified")}
+Skills: {founder_profile.get("skills", "not specified")}
+Available Time: {founder_profile.get("available_time", "not specified")}
+Main Goal: {founder_profile.get("main_goal", "not specified")}
+Already Tried: {founder_profile.get("already_tried", "not specified")}
+</founder_info>
+
+<idea_summary>
+{idea_summary}
+</idea_summary>
+
+<current_scores>
+{scores_text}
+</current_scores>
+
+<current_verdict>
+MVP Ready: {overall.get("is_mvp_ready", "N/A")}
+Investment Ready: {overall.get("is_investment_ready", "N/A")}
+Incubator Ready: {overall.get("is_incubator_ready", "N/A")}
+Final Verdict: {overall.get("final_verdict", "N/A")}
+</current_verdict>
+
+<problem_summary>
+{problem.get("description", "N/A")}
+</problem_summary>
+
+<solution_summary>
+{solution.get("simple_explanation", "N/A")}
+</solution_summary>
+
+<instructions>
+{type_instruction}
 </instructions>
 """

@@ -8,7 +8,8 @@ from analyzer import (
     validate_input,
     generate_single_question,
     analyze_idea,
-    grade_output
+    grade_output,
+    generate_readiness_tips
 )
 from report import save_json, save_markdown
 
@@ -57,7 +58,8 @@ defaults = {
     "answers_history": [],
     "chat_index": 0,
     "chat_history": [],
-    "founder_data": {}
+    "founder_data": {},
+    "sub_page": None
 }
 
 for key, value in defaults.items():
@@ -885,100 +887,223 @@ elif st.session_state.step == 4:
         attempt = 0
         success = False
         analysis = None
-    
+
         with st.spinner("⏳ Analyzing your idea... This may take a few seconds..."):
             while attempt < MAX_RETRIES:
                 analysis = analyze_idea(
-                st.session_state.idea,
-                st.session_state.founder_name,
-                st.session_state.founder_data,
-                st.session_state.followup_qa
-            )
+                    st.session_state.idea,
+                    st.session_state.founder_name,
+                    st.session_state.founder_data,
+                    st.session_state.followup_qa
+                )
                 grade = grade_output(analysis)
-    
+
                 if grade["quality_score"] >= 3 and grade.get("feedback", "").strip():
                     success = True
                     break
-                
+
                 attempt += 1
-    
+
         if not success:
             st.error("❌ Analysis failed after 3 attempts. Please try again.")
-            
+
             if st.button("🏠 Start Over"):
                 for key in list(st.session_state.keys()):
                     del st.session_state[key]
                 st.rerun()
-            
+
             st.stop()
 
         analysis["founder_profile"] = st.session_state.founder_data
-
         st.session_state.analysis = analysis
 
     analysis = st.session_state.analysis
 
-    # ─── Summary ─────────────────────────────────────────────────────────
-    st.subheader("📊 Overall Summary")
-    st.write(f"**Founder:** {analysis['founder_name']}")
-    st.write(f"**Idea:** {analysis['idea_summary']}")
-    st.write(f"**Overall Score:** {analysis['overall']['score']}/10")
-    st.write(f"**MVP Ready:** {analysis['overall']['is_mvp_ready']}")
-    st.write(f"**Investment Ready:** {analysis['overall']['is_investment_ready']}")
-    st.write(f"**Incubator Ready:** {analysis['overall']['is_incubator_ready']}")
-    st.divider()
+    # ─── Normal Report Page ───────────────────────────────────────────────
+    if st.session_state.sub_page is None:
 
-    # ─── Scores ──────────────────────────────────────────────────────────
-    st.subheader("⭐ Scores (1-10)")
-    scores = analysis["scores"]
-    for category, data in scores.items():
-        st.write(f"**{category.replace('_', ' ').title()}:** {data['score']}/10")
-        st.write(f"_{data['reasoning']}_")
-    st.divider()
+        # ─── Summary ─────────────────────────────────────────────────────
+        st.subheader("📊 Overall Summary")
+        st.write(f"**Founder:** {analysis.get('founder_name', 'N/A')}")
+        st.write(f"**Idea:** {analysis.get('idea_summary', 'N/A')}")
+        st.write(f"**Overall Score:** {analysis.get('overall', {}).get('score', 'N/A')}/10")
 
-    # ─── Problem & Solution ───────────────────────────────────────────────
-    st.subheader("🎯 Problem Statement")
-    st.write(analysis["problem_statement"]["description"])
-    st.divider()
+        mvp_status = analysis.get('overall', {}).get('is_mvp_ready', 'N/A')
+        st.write(f"**MVP Ready:** {mvp_status}")
+        if "No" in str(mvp_status):
+            if st.button("🔧 How to make it MVP Ready?", key="btn_mvp_help"):
+                st.session_state.sub_page = "mvp_help"
+                st.rerun()
 
-    st.subheader("💡 Proposed Solution")
-    st.write(analysis["proposed_solution"]["what_is_built"])
-    st.divider()
+        investment_status = analysis.get('overall', {}).get('is_investment_ready', 'N/A')
+        st.write(f"**Investment Ready:** {investment_status}")
+        if "No" in str(investment_status):
+            if st.button("💰 How to make it Investment Ready?", key="btn_investment_help"):
+                st.session_state.sub_page = "investment_help"
+                st.rerun()
 
-    # ─── Download Buttons ─────────────────────────────────────────────────
-    st.subheader("📥 Download Reports")
+        st.write(f"**Incubator Ready:** {analysis.get('overall', {}).get('is_incubator_ready', 'N/A')}")
+        st.divider()
 
-    json_path = save_json(analysis)
-    md_path = save_markdown(analysis)
+        # ─── Scores ──────────────────────────────────────────────────────
+        st.subheader("⭐ Scores (1-10)")
+        scores = analysis.get("scores", {})
+        for category, data in scores.items():
+            st.write(f"**{category.replace('_', ' ').title()}:** {data.get('score', 'N/A')}/10")
+            st.write(f"_{data.get('reasoning', 'N/A')}_")
+        st.divider()
 
-    with open(json_path, "r") as f:
-        json_content = f.read()
+        # ─── Problem Statement ────────────────────────────────────────────
+        st.subheader("🎯 Problem Statement")
+        problem = analysis.get("problem_statement", {})
 
-    with open(md_path, "r", encoding="utf-8") as f:
-        md_content = f.read()
+        st.write(f"**Description:** {problem.get('description', 'N/A')}")
+        st.write(f"**Target Audience:** {problem.get('target_audience', 'N/A')}")
+        st.write(f"**Why Current Solutions Fail:** {problem.get('why_current_solutions_fail', 'N/A')}")
+        st.write(f"**Who Suffers Most:** {problem.get('who_suffers_most', 'N/A')}")
+        st.write(f"**How Long Problem Exists:** {problem.get('how_long_problem_exists', 'N/A')}")
+        st.write(f"**Market Size:** {problem.get('market_size_hint', 'N/A')}")
+        st.write(f"**Current Workarounds:** {problem.get('current_workarounds', 'N/A')}")
 
-    col1, col2 = st.columns(2)
+        st.write("**📖 Real World Example:**")
+        st.info(problem.get("real_world_example", "N/A"))
 
-    with col1:
-        st.download_button(
-            label="📦 Download JSON",
-            data=json_content,
-            file_name="analysis.json",
-            mime="application/json"
-        )
+        st.write("**😣 Pain Points:**")
+        for point in problem.get("pain_points", []):
+            st.write(f"• {point}")
+        st.divider()
 
-    with col2:
-        st.download_button(
-            label="📄 Download Report",
-            data=md_content,
-            file_name="report.md",
-            mime="text/markdown"
-        )
+        # ─── Proposed Solution ────────────────────────────────────────────
+        st.subheader("💡 Proposed Solution")
+        solution = analysis.get("proposed_solution", {})
 
-    st.divider()
+        st.info(f"🎯 **One Line Pitch:** {solution.get('one_line_pitch', 'N/A')}")
 
-    # ─── Start Over ───────────────────────────────────────────────────────
-    if st.button("🔄 Start Over"):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.rerun()
+        st.write("**Simple Explanation:**")
+        st.write(solution.get("simple_explanation", "N/A"))
+
+        st.write("**🔧 How It Works — Step by Step:**")
+        for i, step in enumerate(solution.get("step_by_step_how_it_works", []), 1):
+            st.write(f"{i}. {step}")
+
+        st.write("**⭐ Key Features:**")
+        for feature in solution.get("key_features", []):
+            st.write(f"• {feature}")
+
+        st.write(f"**💪 Unfair Advantage:** {solution.get('unfair_advantage', 'N/A')}")
+        st.divider()
+
+        # ─── Download Buttons ─────────────────────────────────────────────
+        st.subheader("📥 Download Reports")
+
+        json_path = save_json(analysis)
+        md_path = save_markdown(analysis)
+
+        with open(json_path, "r") as f:
+            json_content = f.read()
+
+        with open(md_path, "r", encoding="utf-8") as f:
+            md_content = f.read()
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.download_button(
+                label="📦 Download JSON",
+                data=json_content,
+                file_name="analysis.json",
+                mime="application/json"
+            )
+        with col2:
+            st.download_button(
+                label="📄 Download Report",
+                data=md_content,
+                file_name="report.md",
+                mime="text/markdown"
+            )
+        st.divider()
+
+        # ─── Start Over ───────────────────────────────────────────────────
+        if st.button("🔄 Start Over"):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.rerun()
+
+    # ─── MVP Help Page ────────────────────────────────────────────────────
+    elif st.session_state.sub_page == "mvp_help":
+        st.header("🔧 How to Make Your Idea MVP Ready")
+        st.caption("These are AI generated steps specifically for your idea")
+        st.divider()
+
+        if "mvp_tips" not in st.session_state:
+            with st.spinner("⏳ Generating your MVP roadmap..."):
+                tips = generate_readiness_tips(
+                    st.session_state.analysis,
+                    "mvp"
+                )
+                st.session_state.mvp_tips = tips
+
+        tips = st.session_state.mvp_tips
+
+        st.subheader("📌 What MVP means for your idea")
+        st.info(tips.get("what_it_means", "N/A"))
+
+        st.subheader("❌ Why it is not MVP Ready yet")
+        for point in tips.get("why_not_ready", []):
+            st.write(f"• {point}")
+
+        st.subheader("✅ Steps to become MVP Ready")
+        for i, step in enumerate(tips.get("steps_to_become_ready", []), 1):
+            st.write(f"**{i}.** {step}")
+
+        st.subheader("⏰ Realistic Timeline")
+        st.write(tips.get("realistic_timeline", "N/A"))
+
+        st.subheader("🚀 First thing to do tomorrow")
+        st.success(tips.get("first_action", "N/A"))
+        st.divider()
+
+        if st.button("← Back to Report", key="back_from_mvp"):
+            st.session_state.sub_page = None
+            st.rerun()
+
+    # ─── Investment Help Page ─────────────────────────────────────────────
+    elif st.session_state.sub_page == "investment_help":
+        st.header("💰 How to Make Your Idea Investment Ready")
+        st.caption("These are AI generated steps specifically for your idea")
+        st.divider()
+
+        if "investment_tips" not in st.session_state:
+            with st.spinner("⏳ Generating your Investment roadmap..."):
+                tips = generate_readiness_tips(
+                    st.session_state.analysis,
+                    "investment"
+                )
+                st.session_state.investment_tips = tips
+
+        tips = st.session_state.investment_tips
+
+        st.subheader("📌 What Investment Ready means")
+        st.info(tips.get("what_it_means", "N/A"))
+
+        st.subheader("❌ Why it is not Investment Ready yet")
+        for point in tips.get("why_not_ready", []):
+            st.write(f"• {point}")
+
+        st.subheader("✅ Steps to become Investment Ready")
+        for i, step in enumerate(tips.get("steps_to_become_ready", []), 1):
+            st.write(f"**{i}.** {step}")
+
+        st.subheader("👀 What Investors Look For")
+        for point in tips.get("what_investors_look_for", []):
+            st.write(f"• {point}")
+
+        st.subheader("⏰ Realistic Timeline")
+        st.write(tips.get("realistic_timeline", "N/A"))
+
+        st.subheader("🚀 First thing to do tomorrow")
+        st.success(tips.get("first_action", "N/A"))
+        st.divider()
+
+        if st.button("← Back to Report", key="back_from_investment"):
+            st.session_state.sub_page = None
+            st.rerun()

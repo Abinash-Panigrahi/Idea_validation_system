@@ -12,7 +12,8 @@ from prompts import (
     get_analysis_prompt,
     get_validate_input_prompt,
     get_grade_output_prompt,
-    get_adaptive_question_prompt
+    get_adaptive_question_prompt,
+    get_readiness_tips_prompt
 )
 
 load_dotenv()
@@ -131,4 +132,30 @@ def grade_output(analysis: dict) -> dict:
             "feedback": "AI formatting failed, triggering automatic regeneration."
         }
         
+    return result
+
+def generate_readiness_tips(analysis: dict, readiness_type: str) -> dict:
+    """
+    Generates actionable tips to become MVP ready or Investment ready.
+    readiness_type = "mvp" or "investment"
+    """
+
+    prompt = get_readiness_tips_prompt(analysis, readiness_type)
+    raw_response = call_gemini(prompt, max_output_tokens=2048)
+    cleaned = clean_json(raw_response)
+
+    try:
+        result = json.loads(cleaned)
+    except json.JSONDecodeError as e:
+        print(f"\n⚠️ AI Formatting Error: {e}")
+        print("Raw response:", cleaned[:200])
+        result = {
+            "what_it_means": "Could not generate tips. Please try again.",
+            "why_not_ready": [],
+            "steps_to_become_ready": [],
+            "realistic_timeline": "N/A",
+            "first_action": "Please restart and try again.",
+            "what_investors_look_for": []
+        }
+
     return result

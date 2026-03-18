@@ -52,25 +52,25 @@ def generate_markdown(analysis: dict) -> str:
     """
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    scores = analysis["scores"]
-    overall = analysis["overall"]
-    profile = analysis.get("founder_profile", {})
-    problem = analysis["problem_statement"]
-    solution = analysis["proposed_solution"]
-    innovation = analysis["core_innovation"]
-    market = analysis["market_landscape"]
-    support = analysis["support_required"]
-    tech = analysis["tech_stack"]
+    scores = analysis.get("scores", {})
+    overall = analysis.get("overall", {})
+    profile = analysis.get("founder_profile", {}) 
+    problem = analysis.get("problem_statement", {})
+    solution = analysis.get("proposed_solution", {})
+    innovation = analysis.get("core_innovation", {})
+    market = analysis.get("market_landscape", {})
+    support = analysis.get("support_required", {})
+    tech = analysis.get("tech_stack", {})
 
     md = f"""# 🚀 Startup Idea Validation Report
 Generated: {timestamp}
-Founder: {analysis["founder_name"]}
-Idea: {analysis["idea_summary"]}
+Founder: {analysis.get("founder_name", "N/A")}
+Idea: {analysis.get("idea_summary", "N/A")}
 
 ---
 
 ## 👤 Founder Profile
-- **Name:** {analysis["founder_name"]}
+- **Name:** {analysis.get("founder_name", "N/A")}
 - **Age:** {profile.get("age", "N/A")}
 - **Location:** {profile.get("location", "N/A")}
 - **Background:** {profile.get("background", "N/A")}
@@ -90,28 +90,44 @@ Idea: {analysis["idea_summary"]}
 ---
 
 ## 1️⃣ Problem Statement
-- **Description:** {problem["description"]}
-- **Target Audience:** {problem["target_audience"]}
-- **Why Current Solutions Fail:** {problem["why_current_solutions_fail"]}
+- **Description:** {problem.get("description", "N/A")}
+- **Target Audience:** {problem.get("target_audience", "N/A")}
+- **Why Current Solutions Fail:** {problem.get("why_current_solutions_fail", "N/A")}
+- **Real World Example:** {problem.get("real_world_example", "N/A")}
+- **Who Suffers Most:** {problem.get("who_suffers_most", "N/A")}
+- **Current Workarounds:** {problem.get("current_workarounds", "N/A")}
+- **Market Size:** {problem.get("market_size_hint", "N/A")}
+- **How Long Problem Exists:** {problem.get("how_long_problem_exists", "N/A")}
+
+**Pain Points:**
+{chr(10).join([f"- {point}" for point in problem.get("pain_points", [])])}
 
 ---
 
 ## 2️⃣ Proposed Solution
-- **What is Built:** {solution["what_is_built"]}
-- **How it Solves:** {solution["how_it_solves"]}
+- **Simple Explanation:** {solution.get("simple_explanation", "N/A")}
+
+**How It Works:**
+{chr(10).join([f"- {step}" for step in solution.get("step_by_step_how_it_works", [])])}
+
+**Key Features:**
+{chr(10).join([f"- {feature}" for feature in solution.get("key_features", [])])}
+
+- **Unfair Advantage:** {solution.get("unfair_advantage", "N/A")}
+- **One Line Pitch:** {solution.get("one_line_pitch", "N/A")}
 
 ---
 
 ## 3️⃣ Core Innovation
-- **Uniqueness:** {innovation["uniqueness"]}
-- **Innovation Type:** {innovation["innovation_type"]}
+- **Uniqueness:** {innovation.get("uniqueness", "N/A")}
+- **Innovation Type:** {innovation.get("innovation_type", "N/A")}
 
 ---
 
 ## 4️⃣ Market Landscape
-- **Similar Solutions:** {market["similar_solutions"]}
-- **Competition Level:** {market["competition_level"]}
-- **Market Gap:** {market["market_gap"]}
+- **Similar Solutions:** {market.get("similar_solutions", "N/A")}
+- **Competition Level:** {market.get("competition_level", "N/A")}
+- **Market Gap:** {market.get("market_gap", "N/A")}
 
 ---
 
@@ -128,30 +144,30 @@ Idea: {analysis["idea_summary"]}
 ---
 
 ## 6️⃣ Support Required
-- **Team Needed:** {support["team_needed"]}
-- **Funding Stage:** {support["funding_stage"]}
-- **Partnerships:** {support["partnerships"]}
-- **Regulatory:** {support["regulatory"]}
+- **Team Needed:** {support.get("team_needed", "N/A")}
+- **Funding Stage:** {support.get("funding_stage", "N/A")}
+- **Partnerships:** {support.get("partnerships", "N/A")}
+- **Regulatory:** {support.get("regulatory", "N/A")}
 
 ---
 
 ## 7️⃣ Tech Stack
-- **Backend:** {tech["backend"]}
-- **Frontend:** {tech["frontend"]}
-- **Database:** {tech["database"]}
-- **Cloud:** {tech["cloud"]}
-- **AI Tools:** {tech["ai_tools"]}
+- **Backend:** {tech.get("backend", "N/A")}
+- **Frontend:** {tech.get("frontend", "N/A")}
+- **Database:** {tech.get("database", "N/A")}
+- **Cloud:** {tech.get("cloud", "N/A")}
+- **AI Tools:** {tech.get("ai_tools", "N/A")}
 
 ---
 
 ## 8️⃣ Overall Verdict
-- **Overall Score:** {overall["score"]}/10
-- **MVP Ready:** {overall["is_mvp_ready"]}
-- **Investment Ready:** {overall["is_investment_ready"]}
-- **Incubator Ready:** {overall["is_incubator_ready"]}
+- **Overall Score:** {overall.get("score", "N/A")}/10
+- **MVP Ready:** {overall.get("is_mvp_ready", "N/A")}
+- **Investment Ready:** {overall.get("is_investment_ready", "N/A")}
+- **Incubator Ready:** {overall.get("is_incubator_ready", "N/A")}
 
 ### Final Verdict
-{overall["final_verdict"]}
+{overall.get("final_verdict", "N/A")}
 
 ---
 *Report generated by ThynxAI Idea Lab*
