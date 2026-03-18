@@ -7,10 +7,13 @@ An AI-powered system that analyzes startup ideas and generates detailed evaluati
 ## 📌 What it Does
 
 1. Takes a startup idea as input
-2. Collects founder information (name + background)
-3. Generates intelligent follow-up questions based on the idea
+2. Collects detailed founder information through a conversational chat interface
+3. Generates intelligent adaptive follow-up questions based on the idea and founder profile
 4. Analyzes the idea across 8 structured dimensions
-5. Generates a detailed evaluation report (JSON + Markdown)
+5. Shows detailed problem statement with pain points, real world examples and market size
+6. Shows detailed proposed solution with step by step breakdown and key features
+7. Generates AI powered MVP and Investment readiness roadmap if not ready
+8. Generates a detailed evaluation report (JSON + Markdown)
 
 ---
 
@@ -103,14 +106,14 @@ After running, the system generates:
 - `outputs/report.md` → Human-readable Markdown report
 
 ### 8 Analysis Sections:
-1. Problem Statement
-2. Proposed Solution
+1. Problem Statement (description, pain points, real world example, market size, current workarounds)
+2. Proposed Solution (one line pitch, simple explanation, step by step, key features, unfair advantage)
 3. Core Innovation
 4. Market Landscape
 5. Scores (1-10) with reasoning
 6. Support Required
 7. Tech Stack Suggestion
-8. Overall Verdict (MVP/Investment/Incubator ready)
+8. Overall Verdict (MVP/Investment/Incubator ready + AI roadmap if not ready)
 
 ---
 
@@ -120,6 +123,13 @@ After running, the system generates:
 - **AI:** Google Gemini API (gemini-2.5-flash)
 - **UI:** Streamlit
 - **Output:** JSON + Markdown
+
+---
+
+## 🤖 API Usage
+- Normal flow: 7 Gemini API calls
+- Worst case (retries + help pages): 13 Gemini API calls
+- MVP and Investment tips are cached — no extra calls if revisited
 
 ---
 
