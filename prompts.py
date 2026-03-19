@@ -309,12 +309,12 @@ Respond ONLY in this exact JSON format, no extra text outside JSON:
   }},
 
  "scores": {{
-    "market_feasibility": {{"score": 0, "reasoning": "Write ONE sentence about the score reason, then write 'Next step:' and one sentence about what to do next."}},
-    "marketing_potential": {{"score": 0, "reasoning": "Write ONE sentence about the score reason, then write 'Next step:' and one sentence about what to do next."}},
-    "scalability": {{"score": 0, "reasoning": "Write ONE sentence about the score reason, then write 'Next step:' and one sentence about what to do next."}},
-    "revenue_potential": {{"score": 0, "reasoning": "Write ONE sentence about the score reason, then write 'Next step:' and one sentence about what to do next."}},
-    "technical_complexity": {{"score": 0, "reasoning": "Write ONE sentence about the score reason, then write 'Next step:' and one sentence about what to do next."}},
-    "execution_risk": {{"score": 0, "reasoning": "Write ONE sentence about the score reason, then write 'Next step:' and one sentence about what to do next."}}
+    "market_feasibility": {{"score": "<1-10>", "reasoning": "Write ONE sentence about the score reason, then write 'Next step:' and one sentence about what to do next."}},
+    "marketing_potential": {{"score": "<1-10>", "reasoning": "Write ONE sentence about the score reason, then write 'Next step:' and one sentence about what to do next."}},
+    "scalability": {{"score": "<1-10>", "reasoning": "Write ONE sentence about the score reason, then write 'Next step:' and one sentence about what to do next."}},
+    "revenue_potential": {{"score": "<1-10>", "reasoning": "Write ONE sentence about the score reason, then write 'Next step:' and one sentence about what to do next."}},
+    "technical_complexity": {{"score": "<1-10>", "reasoning": "Write ONE sentence about the score reason, then write 'Next step:' and one sentence about what to do next."}},
+    "execution_risk": {{"score": "<1-10>", "reasoning": "Write ONE sentence about the score reason, then write 'Next step:' and one sentence about what to do next."}}
   }},
 
   "support_required": {{
@@ -333,7 +333,7 @@ Respond ONLY in this exact JSON format, no extra text outside JSON:
   }},
 
   "overall": {{
-    "score": 0,
+    "score": "<1-10>",
     "is_mvp_ready": "Yes / No — simple explanation",
     "is_investment_ready": "Yes / No — simple explanation",
     "is_incubator_ready": "Yes / No — simple explanation",
@@ -398,8 +398,8 @@ Do not use LaTeX or any math notation. Use plain text only.
 
 After thinking, respond ONLY in this exact JSON format:
 {{
-  "quality_score": 1 to 5,
-  "feedback": "maximum 10 words only, integer score only"
+  "quality_score": "<integer 1 to 5 only>",
+  "feedback": "maximum 10 words only"
 }}
 </instructions>
 """
@@ -436,7 +436,7 @@ Respond ONLY in this exact JSON format:
 {
   "what_it_means": "explain what MVP means specifically for THIS idea in 2 simple lines",
   "why_not_ready": ["reason 1", "reason 2", "reason 3"],
-  "steps_to_become_ready": ["step 1", "step 2", "step 3", "step 4", "step 5"],
+  "steps_to_become_ready": ["step 1", "step 2", "step 3 — add up to 5 steps if needed"],
   "realistic_timeline": "honest simple timeline like 4-6 weeks if they work part time",
   "first_action": "the ONE thing they should do tomorrow morning to start"
 }
@@ -457,7 +457,7 @@ Respond ONLY in this exact JSON format:
 {
   "what_it_means": "explain what investment ready means specifically for THIS idea in 2 simple lines",
   "why_not_ready": ["reason 1", "reason 2", "reason 3"],
-  "steps_to_become_ready": ["step 1", "step 2", "step 3", "step 4", "step 5"],
+  "steps_to_become_ready": ["step 1", "step 2", "step 3 — add up to 5 steps if needed"],
   "what_investors_look_for": ["thing 1", "thing 2", "thing 3", "thing 4"],
   "realistic_timeline": "honest simple timeline like 3-6 months if they work consistently",
   "first_action": "the ONE thing they should do tomorrow morning to start"

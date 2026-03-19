@@ -50,7 +50,6 @@ defaults = {
     "step": 1,
     "idea": "",
     "founder_name": "",
-    "background": "",
     "questions": [],
     "followup_qa": [],
     "analysis": None,
@@ -265,11 +264,6 @@ elif st.session_state.step == 2:
     elif idx == 1:
         st.markdown("🤖 **What is your age range?**")
         ans = st.selectbox("Your age range:", ["Select...","Under 18", "18-22", "23-27", "28-35", "35-45", "45+"], key="q1_age", label_visibility="collapsed")
-
-        # ans = st.selectbox("", [
-        #     "Select...", "Under 18", "18-22", "23-27", "28-35", "35-45", "45+"
-        # ], key="q1_age")
-
         if st.button("Next →", key="btn1"):
             if ans == "Select...":
                 st.error("Please select an option!")
@@ -800,7 +794,6 @@ elif st.session_state.step == 2:
 
     elif idx >= 16 + offset:
         st.session_state.founder_name = st.session_state.founder_data.get("founder_name", "")
-        st.session_state.background = st.session_state.founder_data.get("background", "")
         st.session_state.step = 3
         st.rerun()
 
@@ -815,7 +808,7 @@ elif st.session_state.step == 3:
 
     # Generate current question if not already generated
     if len(st.session_state.questions) <= current_index:
-        with st.spinner(f"⏳ Thinking..."):
+        with st.spinner("⏳ Thinking..."):
             question = generate_single_question(
             st.session_state.idea,
             st.session_state.founder_name,
@@ -898,7 +891,7 @@ elif st.session_state.step == 4:
                 )
                 grade = grade_output(analysis)
 
-                if grade["quality_score"] >= 3 and grade.get("feedback", "").strip():
+                if int(grade.get("quality_score", 0)) >= 3 and grade.get("feedback", "").strip():
                     success = True
                     break
 
@@ -930,14 +923,14 @@ elif st.session_state.step == 4:
 
         mvp_status = analysis.get('overall', {}).get('is_mvp_ready', 'N/A')
         st.write(f"**MVP Ready:** {mvp_status}")
-        if "No" in str(mvp_status):
+        if "no" in str(mvp_status).lower():
             if st.button("🔧 How to make it MVP Ready?", key="btn_mvp_help"):
                 st.session_state.sub_page = "mvp_help"
                 st.rerun()
 
         investment_status = analysis.get('overall', {}).get('is_investment_ready', 'N/A')
         st.write(f"**Investment Ready:** {investment_status}")
-        if "No" in str(investment_status):
+        if "no" in str(investment_status).lower():
             if st.button("💰 How to make it Investment Ready?", key="btn_investment_help"):
                 st.session_state.sub_page = "investment_help"
                 st.rerun()
@@ -993,11 +986,50 @@ elif st.session_state.step == 4:
         st.write(f"**💪 Unfair Advantage:** {solution.get('unfair_advantage', 'N/A')}")
         st.divider()
 
+        # ─── Core Innovation ──────────────────────────────────────────────────────
+        st.subheader("💡 Core Innovation")
+        innovation = analysis.get("core_innovation", {})
+        st.write(f"**Uniqueness:** {innovation.get('uniqueness', 'N/A')}")
+        st.write(f"**Innovation Type:** {innovation.get('innovation_type', 'N/A')}")
+        st.divider()
+
+        # ─── Market Landscape ─────────────────────────────────────────────────────
+        st.subheader("🌍 Market Landscape")
+        market = analysis.get("market_landscape", {})
+        st.write(f"**Similar Solutions:** {market.get('similar_solutions', 'N/A')}")
+        st.write(f"**Competition Level:** {market.get('competition_level', 'N/A')}")
+        st.write(f"**Market Gap:** {market.get('market_gap', 'N/A')}")
+        st.divider()
+
+        # ─── Support Required ─────────────────────────────────────────────────────
+        st.subheader("🤝 Support Required")
+        support = analysis.get("support_required", {})
+        st.write(f"**Team Needed:** {support.get('team_needed', 'N/A')}")
+        st.write(f"**Funding Stage:** {support.get('funding_stage', 'N/A')}")
+        st.write(f"**Partnerships:** {support.get('partnerships', 'N/A')}")
+        st.write(f"**Regulatory:** {support.get('regulatory', 'N/A')}")
+        st.divider()
+
+        # ─── Tech Stack ───────────────────────────────────────────────────────────
+        st.subheader("🛠️ Tech Stack")
+        tech = analysis.get("tech_stack", {})
+        st.write(f"**Backend:** {tech.get('backend', 'N/A')}")
+        st.write(f"**Frontend:** {tech.get('frontend', 'N/A')}")
+        st.write(f"**Database:** {tech.get('database', 'N/A')}")
+        st.write(f"**Cloud:** {tech.get('cloud', 'N/A')}")
+        st.write(f"**AI Tools:** {tech.get('ai_tools', 'N/A')}")
+        st.divider()
+
         # ─── Download Buttons ─────────────────────────────────────────────
         st.subheader("📥 Download Reports")
 
-        json_path = save_json(analysis)
-        md_path = save_markdown(analysis)
+        if "report_paths" not in st.session_state:
+            json_path = save_json(analysis)
+            md_path = save_markdown(analysis)
+            st.session_state.report_paths = {"json": json_path, "md": md_path}
+        
+        json_path = st.session_state.report_paths["json"]
+        md_path = st.session_state.report_paths["md"]
 
         with open(json_path, "r") as f:
             json_content = f.read()

@@ -39,16 +39,14 @@ def clean_json(raw: str) -> str:
     This function removes them.
     """
     raw = raw.strip()
-
     if raw.startswith("```"):
         parts = raw.split("```")
         raw = parts[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-
-    if raw.startswith("json"):
-        raw = raw[4:]
-
+        # handles "json", " json", "\njson" all safely
+        if raw.lower().lstrip().startswith("json"):
+            raw = raw.lstrip()[4:]
+    if raw.lower().lstrip().startswith("json"):
+        raw = raw.lstrip()[4:]
     return raw.strip()
 
 

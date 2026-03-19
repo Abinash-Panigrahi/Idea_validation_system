@@ -18,7 +18,8 @@ def save_json(analysis: dict) -> str:
     """
     os.makedirs("outputs", exist_ok=True)
 
-    file_path = "outputs/analysis.json"
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_path = f"outputs/analysis_{ts}.json"
 
     with open(file_path, "w") as f:
         json.dump(analysis, f, indent=2)
@@ -33,7 +34,8 @@ def save_markdown(analysis: dict) -> str:
     """
     os.makedirs("outputs", exist_ok=True)
 
-    file_path = "outputs/report.md"
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_path = f"outputs/report_{ts}.md"
 
     md_content = generate_markdown(analysis)
 
@@ -50,6 +52,8 @@ def generate_markdown(analysis: dict) -> str:
     Converts analysis dictionary into
     a human readable markdown string.
     """
+    def safe(text):
+        return str(text).replace("|", "-")
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     scores = analysis.get("scores", {})
@@ -134,12 +138,12 @@ Idea: {analysis.get("idea_summary", "N/A")}
 ## 5️⃣ Scores (1-10)
 | Category | Score | Reasoning |
 |----------|-------|-----------|
-| Market Feasibility | {scores.get("market_feasibility", {}).get("score", "N/A")}/10 | {scores.get("market_feasibility", {}).get("reasoning", "N/A")} |
-| Marketing Potential | {scores.get("marketing_potential", {}).get("score", "N/A")}/10 | {scores.get("marketing_potential", {}).get("reasoning", "N/A")} |
-| Scalability | {scores.get("scalability", {}).get("score", "N/A")}/10 | {scores.get("scalability", {}).get("reasoning", "N/A")} |
-| Revenue Potential | {scores.get("revenue_potential", {}).get("score", "N/A")}/10 | {scores.get("revenue_potential", {}).get("reasoning", "N/A")} |
-| Technical Complexity | {scores.get("technical_complexity", {}).get("score", "N/A")}/10 | {scores.get("technical_complexity", {}).get("reasoning", "N/A")} |
-| Execution Risk | {scores.get("execution_risk", {}).get("score", "N/A")}/10 | {scores.get("execution_risk", {}).get("reasoning", "N/A")} |
+| Market Feasibility | {scores.get("market_feasibility", {}).get("score", "N/A")}/10 | {safe(scores.get("market_feasibility", {}).get("reasoning", "N/A"))} |
+| Marketing Potential | {scores.get("marketing_potential", {}).get("score", "N/A")}/10 | {safe(scores.get("marketing_potential", {}).get("reasoning", "N/A"))} |
+| Scalability | {scores.get("scalability", {}).get("score", "N/A")}/10 | {safe(scores.get("scalability", {}).get("reasoning", "N/A"))} |
+| Revenue Potential | {scores.get("revenue_potential", {}).get("score", "N/A")}/10 | {safe(scores.get("revenue_potential", {}).get("reasoning", "N/A"))} |
+| Technical Complexity | {scores.get("technical_complexity", {}).get("score", "N/A")}/10 | {safe(scores.get("technical_complexity", {}).get("reasoning", "N/A"))} |
+| Execution Risk | {scores.get("execution_risk", {}).get("score", "N/A")}/10 | {safe(scores.get("execution_risk", {}).get("reasoning", "N/A"))} |
 
 ---
 
