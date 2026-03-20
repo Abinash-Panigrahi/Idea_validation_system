@@ -4,5 +4,5 @@ __pycache__/
 outputs/
 *.pyc
 
-# files
+# Files for testing
 step2_preview.py

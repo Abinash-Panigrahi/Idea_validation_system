@@ -9,9 +9,11 @@ from analyzer import (
     generate_single_question,
     analyze_idea,
     grade_output,
-    generate_readiness_tips
+    generate_readiness_tips,
 )
 from report import save_json, save_markdown
+from database import save_analysis
+
 
 
 # ─── Page Config ─────────────────────────────────────────────────────────────
@@ -891,7 +893,11 @@ elif st.session_state.step == 4:
                 )
                 grade = grade_output(analysis)
 
-                if int(grade.get("quality_score", 0)) >= 3 and grade.get("feedback", "").strip():
+                try:
+                    score = int(grade.get("quality_score", 0))
+                except (ValueError, TypeError):
+                    score = 0
+                if score >= 3 and grade.get("feedback", "").strip():
                     success = True
                     break
 
@@ -908,7 +914,16 @@ elif st.session_state.step == 4:
             st.stop()
 
         analysis["founder_profile"] = st.session_state.founder_data
+        analysis["followup_qa"] = st.session_state.followup_qa
+        analysis["original_idea"] = st.session_state.idea
         st.session_state.analysis = analysis
+
+    # ─── Save to MongoDB ──────────────────────────────────────────────
+        saved = save_analysis(analysis)
+        if saved:
+            st.success("✅ Analysis saved to database!")
+        else:
+            st.warning("⚠️ Could not save to database. Continuing anyway...")
 
     analysis = st.session_state.analysis
 

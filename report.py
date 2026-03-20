@@ -18,8 +18,7 @@ def save_json(analysis: dict) -> str:
     """
     os.makedirs("outputs", exist_ok=True)
 
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_path = f"outputs/analysis_{ts}.json"
+    file_path = "outputs/analysis.json"
 
     with open(file_path, "w") as f:
         json.dump(analysis, f, indent=2)
@@ -34,8 +33,7 @@ def save_markdown(analysis: dict) -> str:
     """
     os.makedirs("outputs", exist_ok=True)
 
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_path = f"outputs/report_{ts}.md"
+    file_path = "outputs/report.md"
 
     md_content = generate_markdown(analysis)
 

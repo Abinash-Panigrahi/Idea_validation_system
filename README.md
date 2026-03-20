@@ -18,6 +18,7 @@ An AI-powered system that analyzes startup ideas and generates detailed evaluati
 ---
 
 ## 🧩 Project Structure
+
 ```
 Idea_validation_system/
 ├── prompts.py          # All AI prompt functions
@@ -25,6 +26,7 @@ Idea_validation_system/
 ├── report.py           # JSON + Markdown report generation
 ├── main.py             # CLI interface
 ├── app.py              # Streamlit web interface
+├── database.py         # MongoDB Atlas integration
 ├── requirements.txt    # Python dependencies
 ├── .env.example        # Environment variable template
 ├── samples/            # Sample input and output files
@@ -39,20 +41,42 @@ Idea_validation_system/
 
 ---
 
+## 📥 Prerequisites
+
+Before starting, make sure you have these installed:
+
+| Tool | Version | Download |
+|------|---------|----------|
+| Python | 3.8 or above | https://www.python.org/downloads/ |
+| Git | Latest | https://git-scm.com/downloads |
+| VS Code (recommended) | Latest | https://code.visualstudio.com/ |
+
+After installing Python, verify in terminal:
+
+```bash
+python --version
+pip --version
+```
+
+---
+
 ## ⚙️ Setup Instructions
 
 ### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/yourusername/Idea_validation_system.git
 cd Idea_validation_system
 ```
 
 ### 2. Create Virtual Environment
+
 ```bash
 python -m venv .venv
 ```
 
 ### 3. Activate Virtual Environment
+
 ```bash
 # Windows (PowerShell):
 .venv\Scripts\activate
@@ -62,38 +86,69 @@ source .venv/bin/activate
 ```
 
 ### 4. Install Dependencies
+
+All required libraries are in `requirements.txt`:
+
+| Library | Purpose |
+|---------|---------|
+| `google-generativeai` | Gemini AI API |
+| `python-dotenv` | Environment variables |
+| `streamlit` | Web UI |
+| `pymongo[srv]` | MongoDB Atlas connection |
+
 ```bash
 pip install -r requirements.txt
 ```
 
+---
+
+
 ### 5. Set Up Environment Variables
+
 ```bash
 # Copy the example file:
 cp .env.example .env
-
-# Add your Gemini API key to .env:
-GEMINI_API_KEY=your-actual-gemini-key-here
 ```
 
 ### 6. Get Gemini API Key
 1. Go to: https://aistudio.google.com
 2. Click "Get API Key"
-3. Copy and paste into `.env` file
+3. Copy and paste into `.env` file:
+
+```
+GEMINI_API_KEY=your-actual-gemini-key-here
+```
+
+### 7. Set Up MongoDB Atlas
+1. Create free account at https://www.mongodb.com/cloud/atlas/register
+2. Create a free cluster (M0) — select FREE tier only!
+3. Create a database user — ⚠️ save username and password immediately!
+4. Allow network access from anywhere (0.0.0.0/0)
+5. Copy connection string — ⚠️ password will not be shown again after this screen!
+6. Add to `.env`:
+
+```
+MONGO_URI=your-mongodb-connection-string-here
+```
 
 ---
 
 ## 🚀 How to Run
 
 ### Option 1 — CLI (Terminal)
+
 ```bash
 python main.py
 ```
 
 ### Option 2 — Web UI (Streamlit)
+
 ```bash
 streamlit run app.py
 ```
+
 ### Option 3 — Live Demo
+
 🌐 [Try it here](https://ideavalidationsystem-eyvfi388xtmk5shgmggxt7.streamlit.app/)
 
 ---
@@ -122,18 +177,20 @@ After running, the system generates:
 - **Language:** Python
 - **AI:** Google Gemini API (gemini-2.5-flash)
 - **UI:** Streamlit
+- **Database:** MongoDB Atlas
 - **Output:** JSON + Markdown
 
 ---
 
 ## 🤖 API Usage
+
 - Normal flow: 7 Gemini API calls
 - Worst case (retries + help pages): 13 Gemini API calls
 - MVP and Investment tips are cached — no extra calls if revisited
 
 ---
 
-## 📦 Sample Input/Output
+## 🗂️ Sample Input/Output
 
 See the `samples/` folder for:
 - Example startup idea input → `samples/sample_input.md`
@@ -150,8 +207,8 @@ Use `.env.example` as template only.
 | Variable | Description |
 |----------|-------------|
 | `GEMINI_API_KEY` | Your Google Gemini API key |
+| `MONGO_URI` | Your MongoDB Atlas connection string |
 
 ---
 
-*Built with Python + Google Gemini AI*
-
+*Built with Python + Google Gemini AI + MongoDB Atlas*
