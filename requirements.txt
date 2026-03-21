@@ -2,3 +2,4 @@ google-generativeai
 python-dotenv
 streamlit
 pymongo[srv]
+tavily-python

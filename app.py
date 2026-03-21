@@ -919,11 +919,7 @@ elif st.session_state.step == 4:
         st.session_state.analysis = analysis
 
     # ─── Save to MongoDB ──────────────────────────────────────────────
-        saved = save_analysis(analysis)
-        if saved:
-            st.success("✅ Analysis saved to database!")
-        else:
-            st.warning("⚠️ Could not save to database. Continuing anyway...")
+        save_analysis(analysis)
 
     analysis = st.session_state.analysis
 

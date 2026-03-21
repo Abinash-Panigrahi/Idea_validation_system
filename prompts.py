@@ -159,11 +159,33 @@ Respond ONLY in this exact JSON format:
 </instructions>
 """
 
-def get_analysis_prompt(idea: str, founder_name: str, founder_data: dict, followup_qa: list) -> str:
+def get_analysis_prompt(idea: str, founder_name: str, founder_data: dict, followup_qa: list, search_context: dict = None) -> str:
     qa_text = "\n".join([
         f"Q: {item['question']}\nA: {item['answer']}"
         for item in followup_qa
     ])
+
+    # ── Build search block BEFORE f-string ──
+    if search_context:
+        search_block = f"""
+<real_world_data>
+IMPORTANT: This is REAL data from the internet searched right now.
+Use this to make your analysis accurate and grounded in reality.
+Ignore any website navigation text, buttons, or UI elements in this data.
+Extract only meaningful business information.
+
+COMPETITORS FOUND ONLINE:
+{search_context.get("competitors", "No data found")}
+
+MARKET SIZE DATA FOUND ONLINE:
+{search_context.get("market_size", "No data found")}
+
+RECENT NEWS AND TRENDS:
+{search_context.get("recent_news", "No data found")}
+</real_world_data>
+"""
+    else:
+        search_block = ""
 
     return f"""
 <role>
@@ -198,7 +220,16 @@ About Themselves: {founder_data.get('about_self', 'Not specified')}
 {qa_text}
 </followup_answers>
 
+{search_block}
+
 <instructions>
+Web search data rules:
+- Real world data is provided in <real_world_data> tags above
+- ALWAYS use this data for market_landscape section — do not guess
+- Use competitor names and market size numbers from real data
+- Ignore any UI text like buttons, navigation, font size controls
+- If real data contradicts your training knowledge — trust real data
+
 Your goal is to help this founder succeed — not judge them!
 Build the best possible roadmap for their idea!
 
@@ -255,7 +286,7 @@ Most important rules:
 - Final verdict must be motivating AND realistic — not fake praise!
 - Never give scores below 4 for a genuine idea! Scores reflect FUTURE POTENTIAL not current state! Challenges must be explained in reasoning kindly!
 - Overall score must consider BOTH idea potential AND founder's current readiness. If founder knows very little → overall score should be 5 or below even if idea is strong!
-- If competition level is High AND no clear differentiation exists →scalability and revenue scores must not exceed 5!
+- If competition level is High AND no clear differentiation exists → scalability and revenue scores must not exceed 5!
 
 Language rules:
 - Age Under 18 or 18-22 → very simple words, short sentences, encouraging tone
@@ -308,7 +339,7 @@ Respond ONLY in this exact JSON format, no extra text outside JSON:
     "market_gap": "what gap does this fill"
   }},
 
- "scores": {{
+  "scores": {{
     "market_feasibility": {{"score": "<1-10>", "reasoning": "Write ONE sentence about the score reason, then write 'Next step:' and one sentence about what to do next."}},
     "marketing_potential": {{"score": "<1-10>", "reasoning": "Write ONE sentence about the score reason, then write 'Next step:' and one sentence about what to do next."}},
     "scalability": {{"score": "<1-10>", "reasoning": "Write ONE sentence about the score reason, then write 'Next step:' and one sentence about what to do next."}},

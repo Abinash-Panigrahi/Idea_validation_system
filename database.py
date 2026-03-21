@@ -14,12 +14,17 @@ load_dotenv()
 
 MONGO_URI = os.environ.get("MONGO_URI")
 
-if not MONGO_URI:
-    raise ValueError("MONGO_URI not found. Please set it in your .env file.")
+client = None
+db = None
+collection = None
 
-client = MongoClient(MONGO_URI)
-db = client["ThynxAI_db"]
-collection = db["analyses"]
+try:
+    if MONGO_URI:
+        client = MongoClient(MONGO_URI)
+        db = client["ThynxAI_db"]
+        collection = db["analyses"]
+except Exception as e:
+    print(f"MongoDB connection failed: {str(e)}")
 
 
 # ─── Operations ───────────────────────────────────────────────────────────────
@@ -29,16 +34,13 @@ def save_analysis(analysis: dict) -> bool:
     Saves one analysis result to MongoDB.
     Returns True if saved successfully, False if failed.
     """
+    if collection is None:
+        print("Database not connected. Skipping save.")
+        return False
     try:
-        # 1. Create a copy so PyMongo doesn't mutate the original dict
         db_data = analysis.copy()
-
-        # 2. Add timestamp to the copy
         db_data["saved_at"] = datetime.now().isoformat()
-
-        # 3. Insert the copy into MongoDB
         collection.insert_one(db_data)
-
         return True
 
     except Exception as e:
@@ -46,12 +48,14 @@ def save_analysis(analysis: dict) -> bool:
         return False
 
 
-# -Will be used in admin dashboard (Phase 2 in future)-------
+# ─── Will be used in admin dashboard (Phase 2) ───────────────────────────────
 
 def get_all_analyses() -> list:
     """
     Returns all saved analyses from MongoDB.
     """
+    if collection is None:
+        return []
     try:
         results = list(collection.find({}, {"_id": 0}))
         return results

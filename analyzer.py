@@ -15,6 +15,7 @@ from prompts import (
     get_adaptive_question_prompt,
     get_readiness_tips_prompt
 )
+from websearch import get_search_context
 
 load_dotenv()
 
@@ -94,7 +95,8 @@ def generate_single_question(idea: str, founder_name: str, founder_data: dict, h
     return result.get("question", "Could you tell me a little more about your idea?")
 
 def analyze_idea(idea: str, founder_name: str, founder_data: dict, followup_qa: list) -> dict:
-    prompt = get_analysis_prompt(idea, founder_name, founder_data, followup_qa)
+    search_context = get_search_context(idea)
+    prompt = get_analysis_prompt(idea, founder_name, founder_data, followup_qa, search_context)
     raw_response = call_gemini(prompt, max_output_tokens=8192)
     cleaned = clean_json(raw_response)
     try:
