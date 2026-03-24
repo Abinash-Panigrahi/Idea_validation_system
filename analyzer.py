@@ -142,7 +142,7 @@ def generate_readiness_tips(analysis: dict, readiness_type: str ,search_context:
     """
 
     prompt = get_readiness_tips_prompt(analysis, readiness_type ,search_context)
-    raw_response = call_gemini(prompt, max_output_tokens=2048)
+    raw_response = call_gemini(prompt, max_output_tokens=4096)
     cleaned = clean_json(raw_response)
 
     try:
