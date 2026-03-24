@@ -6,7 +6,7 @@ No API calls happen here — just text building.
 
 import json
 
-def get_adaptive_question_prompt(idea: str, founder_name: str, founder_data: dict, history: list) -> str:
+def get_adaptive_question_prompt(idea: str, founder_name: str, founder_data: dict, history: list ,search_context: dict = None) -> str:
     history_text = ""
     if history:
         history_text = "\n".join([
@@ -15,6 +15,28 @@ def get_adaptive_question_prompt(idea: str, founder_name: str, founder_data: dic
         ])
 
     question_number = len(history) + 1
+
+    if search_context:
+        market_block = f"""
+<real_market_data>
+This is REAL data about the market for this idea.
+Use this to ask smarter, more specific questions.
+IMPORTANT: Never use this data to discourage or demotivate the founder.
+Use it to help them THINK about their unique angle and opportunity.
+Even in a competitive market — there is always a gap to fill!
+
+COMPETITORS IN THE MARKET:
+{search_context.get("competitors", "No data found")}
+
+MARKET SIZE DATA:
+{search_context.get("market_size", "No data found")}
+
+RECENT TRENDS:
+{search_context.get("recent_news", "No data found")}
+</real_market_data>
+"""
+    else:
+        market_block = ""
 
     return f"""
 <role>
@@ -67,6 +89,8 @@ About Themselves: {founder_data.get('about_self', 'Not specified')}
 {idea}
 </startup_idea>
 
+{market_block}
+
 <conversation_history>
 {history_text}
 </conversation_history>
@@ -81,8 +105,18 @@ Step 1 — Understand the idea and founder situation:
 - What do they NOT know yet?
 - Is this idea buildable given their situation?
 
-Step 2 — Judge the answer level:
-- Strong detailed answer → 
+Step 2 — Use real market data as an OPPORTUNITY finder:
+- Look at real competitors in <real_market_data>
+- Find the GAP — what are competitors NOT doing well?
+- Use this to ask about the founder's UNIQUE ANGLE
+- NEVER use data to scare or discourage the founder
+- NEVER ask "how will you compete with X?"
+- INSTEAD ask "what would make your version special?"
+- Even a crowded market has gaps — help them find it!
+- Real data = opportunity finder, not discouragement tool!
+
+Step 3 — Judge the answer level:
+- Strong detailed answer →
   ask a deeper more specific question
   treat them like they know their stuff!
 
@@ -94,25 +128,25 @@ Step 2 — Judge the answer level:
   ask a very basic friendly question
   help them discover from scratch!
 
-Step 3 — Find the most helpful next question:
+Step 4 — Find the most helpful next question:
 - What ONE thing would help them the most right now?
 - What gap in their knowledge should we fill next?
 - If they said "I don't know" → ask something simpler
   that helps them think about their own idea!
 - Never make them feel stupid or lost!
 
-Step 4 — Generate a helpful, simple question:
+Step 5 — Generate a helpful, simple question:
 - Use very simple words — like talking to a school student
 - Keep it short — one sentence if possible
 - Make it feel like a friendly conversation
 - The question should help them THINK and DISCOVER
-  something useful about their own idea!
+  something useful about their own idea and feel CONFIDENT!
 
 Worst case handling:
 - If ALL answers are "I don't know" →
   ask questions that help them think from scratch!
   Example: "Imagine your best friend has this problem —
-  how would you help them?" 
+  how would you help them?"
 - Never give up on the founder!
 - Every founder starts somewhere! 🌱
 </your_thinking_process>
@@ -152,9 +186,28 @@ Worst case handling:
 </rules>
 
 <instructions>
+CRITICAL RULES FOR QUESTION GENERATION:
+- You MUST read <real_market_data> before generating any question
+- Every question MUST be specific to THIS idea and THIS market
+- Never generate generic questions like "who is your customer?"
+- Always reference specific market reality in your question
+- Make the founder think about their UNIQUE angle vs real competitors
+- Question must feel like it came from someone who just researched this market
+- Use layman language — simple words, one sentence maximum
+- Never demotivate — frame competition as opportunity always
+
+QUESTION PATTERN:
+Bad  → "Who is your target customer?"
+Good → "Given that [specific competitor] already serves [specific segment],
+        which specific group of customers do you think they are NOT serving well?"
+
+Bad  → "How will you make money?"  
+Good → "Most players in this space make money through [real model from data] —
+        do you see a different revenue opportunity they are missing?"
+
 Respond ONLY in this exact JSON format:
 {{
-  "question": "your single diagnostic question here?"
+  "question": "your single specific market-aware question here?"
 }}
 </instructions>
 """
@@ -223,12 +276,36 @@ About Themselves: {founder_data.get('about_self', 'Not specified')}
 {search_block}
 
 <instructions>
-Web search data rules:
-- Real world data is provided in <real_world_data> tags above
-- ALWAYS use this data for market_landscape section — do not guess
-- Use competitor names and market size numbers from real data
-- Ignore any UI text like buttons, navigation, font size controls
-- If real data contradicts your training knowledge — trust real data
+CRITICAL — REAL WORLD DATA USAGE RULES:
+You have been given REAL internet data in <real_world_data> tags.
+This is not optional context — you MUST use it.
+
+For market_landscape section:
+- similar_solutions MUST name actual companies from the search data
+- competition_level MUST reflect actual market activity found
+- market_gap MUST be based on what competitors are actually missing
+
+For market_size_hint in problem_statement:
+- MUST include actual numbers from search data (crore, billion, CAGR %)
+- Never say "large market" — always give specific numbers
+
+For scores reasoning:
+- market_feasibility reasoning MUST cite real market size numbers
+- scalability reasoning MUST reference actual competition level
+- revenue_potential reasoning MUST reference real business models found
+
+For proposed_solution:
+- unfair_advantage MUST address what real competitors are missing
+- key_features MUST solve gaps that real competitors have
+
+NEVER use phrases like:
+- "large and growing market"
+- "similar apps exist"  
+- "competition is medium"
+WITHOUT backing them with real numbers from search data.
+
+If search data says "No data found" for any section →
+only then use your training knowledge as fallback.
 
 Your goal is to help this founder succeed — not judge them!
 Build the best possible roadmap for their idea!
@@ -436,7 +513,7 @@ After thinking, respond ONLY in this exact JSON format:
 """
 
 
-def get_readiness_tips_prompt(analysis: dict, readiness_type: str) -> str:
+def get_readiness_tips_prompt(analysis: dict, readiness_type: str ,search_context: dict = None) -> str:
     
     founder_name = analysis.get("founder_name", "the founder")
     idea_summary = analysis.get("idea_summary", "not specified")
@@ -451,6 +528,27 @@ def get_readiness_tips_prompt(analysis: dict, readiness_type: str) -> str:
         for k, v in scores.items()
     ])
 
+    if search_context:
+        market_block = f"""
+<real_market_data>
+This is REAL current data about this idea's market.
+Use this to give specific, accurate, actionable tips.
+NEVER use this data to discourage — use it to guide!
+Even in a competitive market there is always a path forward!
+
+COMPETITORS:
+{search_context.get("competitors", "No data found")}
+
+MARKET SIZE:
+{search_context.get("market_size", "No data found")}
+
+RECENT TRENDS:
+{search_context.get("recent_news", "No data found")}
+</real_market_data>
+"""
+    else:
+        market_block = ""
+
     if readiness_type == "mvp":
         type_instruction = """
 Your job is to tell this founder EXACTLY what they need to do to make their idea MVP ready.
@@ -459,39 +557,99 @@ MVP means — the smallest possible working version of the product that real use
 
 Generate tips that are:
 - Specific to THIS idea — not generic advice
-- Simple enough for this founder to understand and act on
+- Use REAL competitor names and market numbers from <real_market_data>
+- Never say "research the market" — tell them WHAT the market shows
+- Never say "talk to users" — tell them WHICH specific users and WHERE
+- Never say "build a prototype" — tell them WHAT exactly to build first
+- Give specific Indian platforms, tools, communities where relevant
+- Simple enough for a school student to understand and act on
 - Honest about what is missing right now
 - Encouraging — every problem has a solution!
 
+CRITICAL RULES:
+- what_it_means → explain MVP using THIS idea as example with real numbers
+- why_not_ready → use actual gaps found in search data, not generic reasons
+- steps_to_become_ready → each step must be specific and actionable
+  Bad step  → "Build your product"
+  Good step → "Build a WhatsApp bot first — no app needed, zero cost,
+               test with 10 kirana store owners in your city this week"
+- realistic_timeline → based on founder's available time from profile
+- first_action → one sentence, so specific they can do it tomorrow morning
+
+Example of bad tips:
+"Research your competitors and understand the market"
+"Talk to potential users and get feedback"
+"Build an MVP and test it"
+
+Example of good tips:
+"Blinkit holds 45% market share but has zero presence in
+tier-3 cities — your MVP should target exactly these areas.
+Start with one locality, 10 store owners, WhatsApp only."
+
 Respond ONLY in this exact JSON format:
 {
-  "what_it_means": "explain what MVP means specifically for THIS idea in 2 simple lines",
-  "why_not_ready": ["reason 1", "reason 2", "reason 3"],
-  "steps_to_become_ready": ["step 1", "step 2", "step 3 — add up to 5 steps if needed"],
-  "realistic_timeline": "honest simple timeline like 4-6 weeks if they work part time",
-  "first_action": "the ONE thing they should do tomorrow morning to start"
+  "what_it_means": "explain what MVP means for THIS specific idea with real example — 2 simple lines",
+  "why_not_ready": ["specific reason 1 from real market data", "specific reason 2", "specific reason 3"],
+  "steps_to_become_ready": ["very specific step 1", "very specific step 2", "very specific step 3 — add up to 5 if needed"],
+  "realistic_timeline": "honest timeline based on founder available time — e.g. 4-6 weeks working part time",
+  "first_action": "one ultra-specific thing they can do tomorrow morning — no vague advice"
 }
 """
     else:
         type_instruction = """
 Your job is to tell this founder EXACTLY what they need to do to make their idea investment ready.
 
-Investment ready means — the idea is structured, validated and promising enough that an investor would consider putting money into it.
+Investment ready means — the idea is structured, validated and promising enough that an Indian investor, incubator or angel would consider putting money into it.
 
 Generate tips that are:
 - Specific to THIS idea — not generic advice
-- Simple enough for this founder to understand and act on
+- Use REAL market numbers, competitor funding data from <real_market_data>
+- Never say "show traction" — tell them WHAT traction looks like in numbers
+- Never say "find investors" — tell them WHAT TYPE of investors suit this idea
+  example: angel investors, government grants, state incubators, startup accelerators
+- Never say "validate your idea" — tell them HOW with specific metrics
+- Reference real Indian funding landscape where relevant
+- Simple enough for a school student to understand and act on
 - Honest about what is missing right now
 - Encouraging — every problem has a solution!
 
+CRITICAL RULES:
+- what_it_means → explain investment readiness using THIS idea + real market context
+- why_not_ready → use actual gaps from scores and real market data
+  Bad  → "You don't have enough traction"
+  Good → "Early stage investors in this space typically look for
+          at least 1000 active users and ₹1L monthly revenue
+          before writing a seed check — you are not there yet"
+- steps_to_become_ready → ultra specific roadmap
+  Bad  → "Build your product and get users"
+  Good → "Look for government startup programs and incubators
+          in your state — they offer free mentorship and 
+          investor connections specifically for early stage ideas"
+- what_investors_look_for → specific to THIS idea's industry
+  Use real funding patterns from search data if available
+  Example → "Quick commerce investors look for: dark store unit economics,
+             order frequency per user per week, CAC vs LTV ratio"
+- realistic_timeline → based on founder's available time and current score
+- first_action → one sentence, ultra specific, doable tomorrow morning
+
+Example of bad tips:
+"Get more users and show growth"
+"Approach investors with a good pitch deck"
+"Validate your business model"
+
+Example of good tips:
+"Look for early stage accelerators that accept pre-revenue ideas —
+many government and private programs offer free mentorship
+and investor connections for ideas at exactly your stage."
+
 Respond ONLY in this exact JSON format:
 {
-  "what_it_means": "explain what investment ready means specifically for THIS idea in 2 simple lines",
-  "why_not_ready": ["reason 1", "reason 2", "reason 3"],
-  "steps_to_become_ready": ["step 1", "step 2", "step 3 — add up to 5 steps if needed"],
-  "what_investors_look_for": ["thing 1", "thing 2", "thing 3", "thing 4"],
-  "realistic_timeline": "honest simple timeline like 3-6 months if they work consistently",
-  "first_action": "the ONE thing they should do tomorrow morning to start"
+  "what_it_means": "explain investment readiness for THIS idea with real market context — 2 simple lines",
+  "why_not_ready": ["specific reason 1 with real data", "specific reason 2", "specific reason 3"],
+  "steps_to_become_ready": ["ultra specific step 1", "ultra specific step 2", "ultra specific step 3 — add up to 5 if needed"],
+  "what_investors_look_for": ["specific metric or signal 1 for THIS industry", "specific thing 2", "specific thing 3", "specific thing 4"],
+  "realistic_timeline": "honest timeline based on founder available time and current readiness",
+  "first_action": "one ultra-specific thing they can do tomorrow morning — name the exact platform, person or action"
 }
 """
 
@@ -537,6 +695,8 @@ Final Verdict: {overall.get("final_verdict", "N/A")}
 <solution_summary>
 {solution.get("simple_explanation", "N/A")}
 </solution_summary>
+
+{market_block}
 
 <instructions>
 {type_instruction}

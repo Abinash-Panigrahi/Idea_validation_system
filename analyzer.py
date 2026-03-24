@@ -82,8 +82,8 @@ def validate_input(idea: str) -> dict:
         result = {"status": "INVALID", "reason": "AI formatting failed"}
     return result
 
-def generate_single_question(idea: str, founder_name: str, founder_data: dict, history: list) -> str:
-    prompt = get_adaptive_question_prompt(idea, founder_name, founder_data, history)
+def generate_single_question(idea: str, founder_name: str, founder_data: dict, history: list ,search_context: dict = None) -> str:
+    prompt = get_adaptive_question_prompt(idea, founder_name, founder_data, history ,search_context)
     raw_response = call_gemini(prompt, max_output_tokens=2048)
     cleaned = clean_json(raw_response)
     try:
@@ -94,8 +94,9 @@ def generate_single_question(idea: str, founder_name: str, founder_data: dict, h
         result = {"question": "Can you explain more about your target market?"}
     return result.get("question", "Could you tell me a little more about your idea?")
 
-def analyze_idea(idea: str, founder_name: str, founder_data: dict, followup_qa: list) -> dict:
-    search_context = get_search_context(idea)
+def analyze_idea(idea: str, founder_name: str, founder_data: dict, followup_qa: list ,search_context: dict = None) -> dict:
+    if search_context is None:
+        search_context = get_search_context(idea)
     prompt = get_analysis_prompt(idea, founder_name, founder_data, followup_qa, search_context)
     raw_response = call_gemini(prompt, max_output_tokens=8192)
     cleaned = clean_json(raw_response)
@@ -134,13 +135,13 @@ def grade_output(analysis: dict) -> dict:
         
     return result
 
-def generate_readiness_tips(analysis: dict, readiness_type: str) -> dict:
+def generate_readiness_tips(analysis: dict, readiness_type: str ,search_context: dict = None) -> dict:
     """
     Generates actionable tips to become MVP ready or Investment ready.
     readiness_type = "mvp" or "investment"
     """
 
-    prompt = get_readiness_tips_prompt(analysis, readiness_type)
+    prompt = get_readiness_tips_prompt(analysis, readiness_type ,search_context)
     raw_response = call_gemini(prompt, max_output_tokens=2048)
     cleaned = clean_json(raw_response)
 

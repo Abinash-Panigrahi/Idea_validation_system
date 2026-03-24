@@ -13,6 +13,7 @@ from analyzer import (
 )
 from report import save_json, save_markdown
 from database import save_analysis
+from websearch import get_search_context
 
 
 
@@ -60,7 +61,8 @@ defaults = {
     "chat_index": 0,
     "chat_history": [],
     "founder_data": {},
-    "sub_page": None
+    "sub_page": None,
+    "search_context": None 
 }
 
 for key, value in defaults.items():
@@ -285,8 +287,14 @@ elif st.session_state.step == 2:
         if st.button("Next →", key="btn2"):
             if country == "Select..." or not city.strip():
                 st.error("Please fill both country and city!")
+            elif len(city.strip()) < 2:
+                st.error("Please enter a valid city name!")
+            elif not city.strip().replace(" ", "").isalpha():
+                st.error("City name should only contain letters!")
             else:
-                save_and_next("Where are you based?", f"{city}, {country}", "location")
+                # Capitalize properly — "bhubaneswar" → "Bhubaneswar"
+                clean_city = city.strip().title()
+                save_and_next("Where are you based?", f"{clean_city}, {country}", "location")
 
     # ══════════════════════════════════════════════════════════════════════════════
     # PROFESSIONAL BLOCK — Q3 Background → Q4 Sub-field → Q5 Role → Q6 Skills
@@ -796,6 +804,14 @@ elif st.session_state.step == 2:
 
     elif idx >= 16 + offset:
         st.session_state.founder_name = st.session_state.founder_data.get("founder_name", "")
+        
+         # ── Run Tavily once here — stored for Step 3 AND Step 4 ──
+        if st.session_state.search_context is None:
+            with st.spinner("🔍 Researching the market for your idea..."):
+                st.session_state.search_context = get_search_context(
+                    st.session_state.idea,
+                    st.session_state.founder_data
+                )
         st.session_state.step = 3
         st.rerun()
 
@@ -815,7 +831,8 @@ elif st.session_state.step == 3:
             st.session_state.idea,
             st.session_state.founder_name,
             st.session_state.founder_data,
-            history
+            history,
+            st.session_state.search_context
         )
             st.session_state.questions.append(question)
 
@@ -889,7 +906,8 @@ elif st.session_state.step == 4:
                     st.session_state.idea,
                     st.session_state.founder_name,
                     st.session_state.founder_data,
-                    st.session_state.followup_qa
+                    st.session_state.followup_qa,
+                    st.session_state.search_context
                 )
                 grade = grade_output(analysis)
 
@@ -916,6 +934,7 @@ elif st.session_state.step == 4:
         analysis["founder_profile"] = st.session_state.founder_data
         analysis["followup_qa"] = st.session_state.followup_qa
         analysis["original_idea"] = st.session_state.idea
+        analysis["search_context"] = st.session_state.search_context
         st.session_state.analysis = analysis
 
     # ─── Save to MongoDB ──────────────────────────────────────────────
@@ -1081,7 +1100,8 @@ elif st.session_state.step == 4:
             with st.spinner("⏳ Generating your MVP roadmap..."):
                 tips = generate_readiness_tips(
                     st.session_state.analysis,
-                    "mvp"
+                    "mvp",
+                    st.session_state.search_context
                 )
                 st.session_state.mvp_tips = tips
 
@@ -1119,7 +1139,8 @@ elif st.session_state.step == 4:
             with st.spinner("⏳ Generating your Investment roadmap..."):
                 tips = generate_readiness_tips(
                     st.session_state.analysis,
-                    "investment"
+                    "investment",
+                    st.session_state.search_context
                 )
                 st.session_state.investment_tips = tips
 

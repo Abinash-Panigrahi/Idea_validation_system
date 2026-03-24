@@ -133,6 +133,20 @@ Idea: {analysis.get("idea_summary", "N/A")}
 
 ---
 
+## 🔍 Real Market Data (Live Research)
+> This data was fetched live from the internet at the time of analysis.
+
+**Competitors Found Online:**
+{(analysis.get("search_context") or {}).get("competitors", "No data found")}
+
+**Market Size Data:**
+{(analysis.get("search_context") or {}).get("market_size", "No data found")}
+
+**Recent News and Trends:**
+{(analysis.get("search_context") or {}).get("recent_news", "No data found")}
+
+---
+
 ## 5️⃣ Scores (1-10)
 | Category | Score | Reasoning |
 |----------|-------|-----------|
