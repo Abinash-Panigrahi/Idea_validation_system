@@ -12,36 +12,25 @@ from datetime import datetime
 # ─── File Saving Functions ───────────────────────────────────────────────────
 
 def save_json(analysis: dict) -> str:
-    """
-    Saves analysis dictionary as JSON file.
-    Returns the file path where it was saved.
-    """
-    os.makedirs("outputs", exist_ok=True)
-
-    file_path = "outputs/analysis.json"
-
-    with open(file_path, "w") as f:
-        json.dump(analysis, f, indent=2)
-
-    return file_path
+    json_string = json.dumps(analysis, indent=2)
+    try:
+        os.makedirs("outputs", exist_ok=True)
+        with open("outputs/analysis.json", "w") as f:
+            f.write(json_string)
+    except Exception:
+        pass
+    return json_string
 
 
 def save_markdown(analysis: dict) -> str:
-    """
-    Generates markdown report and saves it as .md file.
-    Returns the file path where it was saved.
-    """
-    os.makedirs("outputs", exist_ok=True)
-
-    file_path = "outputs/report.md"
-
-    md_content = generate_markdown(analysis)
-
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write(md_content)
-
-    return file_path
-
+    md_string = generate_markdown(analysis)
+    try:
+        os.makedirs("outputs", exist_ok=True)
+        with open("outputs/report.md", "w", encoding="utf-8") as f:
+            f.write(md_string)
+    except Exception:
+        pass
+    return md_string
 
 # ─── Markdown Generator ──────────────────────────────────────────────────────
 

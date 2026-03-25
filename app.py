@@ -1054,18 +1054,12 @@ elif st.session_state.step == 4:
         st.subheader("📥 Download Reports")
 
         if "report_paths" not in st.session_state:
-            json_path = save_json(analysis)
-            md_path = save_markdown(analysis)
-            st.session_state.report_paths = {"json": json_path, "md": md_path}
-        
-        json_path = st.session_state.report_paths["json"]
-        md_path = st.session_state.report_paths["md"]
+            json_content = save_json(analysis)
+            md_content = save_markdown(analysis)
+            st.session_state.report_paths = {"json": json_content, "md": md_content}
 
-        with open(json_path, "r") as f:
-            json_content = f.read()
-
-        with open(md_path, "r", encoding="utf-8") as f:
-            md_content = f.read()
+        json_content = st.session_state.report_paths["json"]
+        md_content = st.session_state.report_paths["md"]
 
         col1, col2 = st.columns(2)
         with col1:
@@ -1098,11 +1092,14 @@ elif st.session_state.step == 4:
 
         if "mvp_tips" not in st.session_state:
             with st.spinner("⏳ Generating your MVP roadmap..."):
-                tips = generate_readiness_tips(
-                    st.session_state.analysis,
-                    "mvp",
-                    st.session_state.search_context
-                )
+                for attempt in range(3):
+                    tips = generate_readiness_tips(
+                        st.session_state.analysis,
+                        "mvp",
+                        st.session_state.search_context
+                    )
+                    if tips.get("what_it_means") and tips.get("steps_to_become_ready"):
+                        break
                 st.session_state.mvp_tips = tips
 
         tips = st.session_state.mvp_tips
@@ -1137,11 +1134,14 @@ elif st.session_state.step == 4:
 
         if "investment_tips" not in st.session_state:
             with st.spinner("⏳ Generating your Investment roadmap..."):
-                tips = generate_readiness_tips(
-                    st.session_state.analysis,
-                    "investment",
-                    st.session_state.search_context
-                )
+                for attempt in range(3):
+                    tips = generate_readiness_tips(
+                        st.session_state.analysis,
+                        "investment",
+                        st.session_state.search_context
+                    )
+                    if tips.get("what_it_means") and tips.get("steps_to_become_ready"):
+                        break
                 st.session_state.investment_tips = tips
 
         tips = st.session_state.investment_tips

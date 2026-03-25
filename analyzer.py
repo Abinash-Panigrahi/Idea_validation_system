@@ -84,7 +84,7 @@ def validate_input(idea: str) -> dict:
 
 def generate_single_question(idea: str, founder_name: str, founder_data: dict, history: list ,search_context: dict = None) -> str:
     prompt = get_adaptive_question_prompt(idea, founder_name, founder_data, history ,search_context)
-    raw_response = call_gemini(prompt, max_output_tokens=2048)
+    raw_response = call_gemini(prompt, max_output_tokens=4096)
     cleaned = clean_json(raw_response)
     try:
         result = json.loads(cleaned)
@@ -96,7 +96,7 @@ def generate_single_question(idea: str, founder_name: str, founder_data: dict, h
 
 def analyze_idea(idea: str, founder_name: str, founder_data: dict, followup_qa: list ,search_context: dict = None) -> dict:
     if search_context is None:
-        search_context = get_search_context(idea)
+        search_context = get_search_context(idea ,founder_data)
     prompt = get_analysis_prompt(idea, founder_name, founder_data, followup_qa, search_context)
     raw_response = call_gemini(prompt, max_output_tokens=8192)
     cleaned = clean_json(raw_response)
@@ -106,7 +106,6 @@ def analyze_idea(idea: str, founder_name: str, founder_data: dict, followup_qa: 
         print(f"\n⚠️ AI Formatting Error: {e}")
         result = {"error": "Analysis failed. Please try again."}
     return result
-
 
 def grade_output(analysis: dict) -> dict:
     """
