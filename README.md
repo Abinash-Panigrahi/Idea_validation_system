@@ -14,6 +14,7 @@ An AI-powered system that analyzes startup ideas and generates detailed evaluati
 6. Shows detailed proposed solution with step by step breakdown and key features
 7. Generates AI powered MVP and Investment readiness roadmap if not ready
 8. Generates a detailed evaluation report (JSON + Markdown)
+9. Fetches real-time market data, competitors and industry trends via web search
 
 ---
 
@@ -27,6 +28,7 @@ Idea_validation_system/
 ├── main.py             # CLI interface
 ├── app.py              # Streamlit web interface
 ├── database.py         # MongoDB Atlas integration
+├── websearch.py        # Tavily real-time web search integration
 ├── requirements.txt    # Python dependencies
 ├── .env.example        # Environment variable template
 ├── samples/            # Sample input and output files
@@ -95,6 +97,7 @@ All required libraries are in `requirements.txt`:
 | `python-dotenv` | Environment variables |
 | `streamlit` | Web UI |
 | `pymongo[srv]` | MongoDB Atlas connection |
+| `tavily-python` | Real-time web search |
 
 ```bash
 pip install -r requirements.txt
@@ -129,6 +132,14 @@ GEMINI_API_KEY=your-actual-gemini-key-here
 
 ```
 MONGO_URI=your-mongodb-connection-string-here
+```
+
+### 8. Get Tavily API Key
+1. Go to: https://app.tavily.com
+2. Sign up and copy your API key
+3. Add to `.env`:
+```
+TAVILY_API_KEY=your-actual-tavily-key-here
 ```
 
 ---
@@ -178,15 +189,17 @@ After running, the system generates:
 - **AI:** Google Gemini API (gemini-2.5-flash)
 - **UI:** Streamlit
 - **Database:** MongoDB Atlas
+- **Web Search:** Tavily API (real-time market data)
 - **Output:** JSON + Markdown
 
 ---
 
 ## 🤖 API Usage
 
-- Normal flow: 7 Gemini API calls
-- Worst case (retries + help pages): 13 Gemini API calls
+- Normal flow: 8 Gemini API calls + 1 Tavily search
+- Worst case (retries + help pages): 14 Gemini API calls
 - MVP and Investment tips are cached — no extra calls if revisited
+- Tavily search runs once after Step 2 and is reused across all steps
 
 ---
 
@@ -208,7 +221,8 @@ Use `.env.example` as template only.
 |----------|-------------|
 | `GEMINI_API_KEY` | Your Google Gemini API key |
 | `MONGO_URI` | Your MongoDB Atlas connection string |
+| `TAVILY_API_KEY` | Your Tavily web search API key |
 
 ---
 
-*Built with Python + Google Gemini AI + MongoDB Atlas*
+*Built with Python + Google Gemini AI + MongoDB Atlas + Tavily Web Search*
