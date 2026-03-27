@@ -3,3 +3,4 @@ python-dotenv
 streamlit
 pymongo[srv]
 tavily-python
+python-pptx

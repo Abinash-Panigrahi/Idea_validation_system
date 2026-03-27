@@ -16,6 +16,7 @@ from prompts import (
     get_readiness_tips_prompt
 )
 from websearch import get_search_context
+from prompts import get_pitch_deck_prompt
 
 load_dotenv()
 
@@ -159,3 +160,39 @@ def generate_readiness_tips(analysis: dict, readiness_type: str ,search_context:
         }
 
     return result
+
+def generate_pitch_slides(analysis: dict) -> list:
+    import re
+    prompt = get_pitch_deck_prompt(analysis)
+    
+    for attempt in range(3):
+        raw_response = call_gemini(prompt, max_output_tokens=4096)
+        
+        # Extract only the JSON array
+        start = raw_response.find("[")
+        end = raw_response.rfind("]") + 1
+        if start == -1 or end == 0:
+            print(f"⚠️ No JSON array found on attempt {attempt+1}")
+            continue
+        
+        content = raw_response[start:end]
+        
+        # Fix trailing commas before closing brackets/braces
+        content = re.sub(r',\s*([\]}])', r'\1', content)
+        
+        # Remove non-standard control characters
+        content = re.sub(r'[\x00-\x1F\x7F]', '', content)
+        
+        try:
+            result = json.loads(content)
+            print(f"✅ PPT Generated successfully on attempt {attempt+1}")
+            return result
+        except json.JSONDecodeError as e:
+            print(f"\n⚠️ PPT Generation Error (attempt {attempt+1}): {e}")
+            lines = content.splitlines()
+            if e.lineno <= len(lines):
+                print(f"Context: {lines[e.lineno-1].strip()}")
+            continue
+    
+    print("❌ PPT generation failed after 3 attempts.")
+    return []

@@ -10,10 +10,13 @@ from analyzer import (
     analyze_idea,
     grade_output,
     generate_readiness_tips,
+    generate_pitch_slides
 )
 from report import save_json, save_markdown
 from database import save_analysis
 from websearch import get_search_context
+from ppt import generate_ppt
+
 
 
 
@@ -1051,7 +1054,7 @@ elif st.session_state.step == 4:
         st.divider()
 
         # ─── Download Buttons ─────────────────────────────────────────────
-        st.subheader("📥 Download Reports")
+        st.subheader("📥 Download ")
 
         if "report_paths" not in st.session_state:
             json_content = save_json(analysis)
@@ -1061,21 +1064,40 @@ elif st.session_state.step == 4:
         json_content = st.session_state.report_paths["json"]
         md_content = st.session_state.report_paths["md"]
 
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
             st.download_button(
                 label="📦 Download JSON",
                 data=json_content,
                 file_name="analysis.json",
-                mime="application/json"
+                mime="application/json",
+                use_container_width=True
             )
         with col2:
             st.download_button(
                 label="📄 Download Report",
                 data=md_content,
                 file_name="report.md",
-                mime="text/markdown"
+                mime="text/markdown",
+                use_container_width=True
             )
+        with col3:
+            if "ppt_bytes" not in st.session_state:
+                if st.button("🎯 Generate Pitch Deck", use_container_width=True):
+                    with st.spinner("⏳ Building your pitch deck..."):
+                        slides_data = generate_pitch_slides(st.session_state.analysis)
+                        ppt_bytes = generate_ppt(slides_data)
+                        st.session_state.ppt_bytes = ppt_bytes
+                        st.rerun()
+                
+            else:
+                st.download_button(
+                    label="⬇️ Download Pitch Deck (.pptx)",
+                    data=st.session_state.ppt_bytes,
+                    file_name="pitch_deck.pptx",
+                    mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                    use_container_width=True
+                )
         st.divider()
 
         # ─── Start Over ───────────────────────────────────────────────────
