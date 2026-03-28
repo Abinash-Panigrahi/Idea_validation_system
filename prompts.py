@@ -857,103 +857,165 @@ Final Verdict: {overall.get("final_verdict", "N/A")}
 
 
 def get_pitch_deck_prompt(analysis: dict) -> str:
+
+    relevant = {
+        "founder_name": analysis.get("founder_name"),
+        "idea_summary": analysis.get("idea_summary"),
+        "problem_statement": analysis.get("problem_statement", {}),
+        "proposed_solution": analysis.get("proposed_solution", {}),
+        "core_innovation": analysis.get("core_innovation", {}),
+        "market_landscape": analysis.get("market_landscape", {}),
+        "scores": analysis.get("scores", {}),
+        "tech_stack": analysis.get("tech_stack", {}),
+        "support_required": analysis.get("support_required", {}),
+        "overall": analysis.get("overall", {}),
+        "founder_profile": analysis.get("founder_profile", {}),
+        "search_context": analysis.get("search_context", "")
+    }
+
     return f"""
 <role>
-You are a startup pitch deck expert.
+You are a startup pitch deck expert preparing investor-ready slide content.
 </role>
 
-<data_grounding_rules>
-The analysis JSON contains a field called "tavily_data" or "market_landscape".
-It has REAL numbers fetched live from the internet.
-
-Rules you MUST follow:
-- If a real TAM/CAGR/market size number exists in the JSON → use it EXACTLY as written
-- Never replace a real number with a vague phrase like "multi-billion dollar market"
-- Never round or paraphrase numbers (e.g. "$4.2B" must stay "$4.2B" not "billions")
-- If real competitor names exist in the JSON → use those exact names on competition slide
-- If NO real number exists → only then write a general phrase
-- Treat the JSON data as a journalist treats a verified source — quote it exactly
-</data_grounding_rules>
-
-<clean_data_protocol>
-All slide titles and labels must follow this strict contract:
-
-ALLOWED in titles:
-- Plain words and numbers only
-- A single colon if needed (e.g. "Market Overview: India")
-- Ampersand & if needed (e.g. "Problem & Impact")
-
-FORBIDDEN in titles — zero exceptions:
-- Forward slashes / or backslashes \
-- Decorative symbols // or /* or */
-- Hashtags # or asterisks *
-- Pipe characters |
-- Any emoji or unicode decoration
-- ALL CAPS entire titles (first letter cap only)
-- Quotation marks inside titles
-
-Self-check before output:
-Read every "title" field in your JSON.
-If ANY forbidden character exists → remove it and rewrite as plain text.
-A title is a clean label — not a design element.
-</clean_data_protocol>
-
 <analysis>
-relevant = {{
-    "founder_name": analysis.get("founder_name"),
-    "idea_summary": analysis.get("idea_summary"),
-    "problem_statement": analysis.get("problem_statement", {{}}),
-    "proposed_solution": analysis.get("proposed_solution", {{}}),
-    "core_innovation": analysis.get("core_innovation", {{}}),
-    "market_landscape": analysis.get("market_landscape", {{}}),
-    "scores": analysis.get("scores", {{}}),
-    "tech_stack": analysis.get("tech_stack", {{}}),
-    "support_required": analysis.get("support_required", {{}}),
-    "overall": analysis.get("overall", {{}}),
-    "founder_profile": analysis.get("founder_profile", {{}})
-}}</analysis>
+{json.dumps(relevant, indent=2, ensure_ascii=True)}
+</analysis>
 
 <instructions>
-Convert this analysis into slide content for an investor pitch deck.
-
-Rules:
-- Maximum 4 bullets per slide
-- Each bullet must be short and punchy — max 10 words
-- Use real market data and competitor names where available
-- Never hallucinate numbers
-- Do not use LaTeX or math notation
-
-Respond ONLY in this exact JSON format:
-[
-  {{"slide": "cover", "title": "idea name here", "subtitle": "one line pitch here", "founder": "founder name here"}},
-  {{"slide": "problem", "title": "The Problem", "bullets": ["bullet 1", "bullet 2", "bullet 3"]}},
-  {{"slide": "solution", "title": "Our Solution", "bullets": ["bullet 1", "bullet 2", "bullet 3"]}},
-  {{"slide": "innovation", "title": "Core Innovation", "bullets": ["bullet 1", "bullet 2"]}},
-  {{"slide": "market", "title": "Market Opportunity", "bullets": ["bullet 1", "bullet 2"], "stat": "big market number here"}},
-  {{"slide": "competition", "title": "Competition", "bullets": ["competitor 1", "competitor 2"], "gap": "our advantage here"}},
-  {{"slide": "business_model", "title": "Business Model", "bullets": ["bullet 1", "bullet 2", "bullet 3"]}},
-  {{"slide": "tech_stack", "title": "Tech Stack", "bullets": ["bullet 1", "bullet 2", "bullet 3"]}},
-  {{"slide": "team", "title": "The Team", "bullets": ["bullet 1", "bullet 2"]}},
-  {{"slide": "scores", "title": "Why We Win", "bullets": ["bullet 1", "bullet 2", "bullet 3"]}},
-  {{"slide": "ask", "title": "The Ask", "bullets": ["bullet 1", "bullet 2", "bullet 3"]}},
-  {{"slide": "closing", "title": "Let's Build Together", "subtitle": "final verdict one line", "founder": "founder name here"}}
-]
+Extract and generate content for each placeholder key below.
+Use ONLY data from the analysis. Do not hallucinate.
+Use real competitor names and market numbers from search_context where available.
+Keep all values short and punchy — max 10 words per field unless specified.
+No slashes, symbols, asterisks, or decorations in any value.
 
 <json_safety_contract>
-Before you output anything, run this self-check on your JSON:
-
-1. ALL property names must use double quotes — never single quotes
-2. ALL string values must use double quotes — never single quotes
-3. If a competitor name or any string contains a quote character →
-   escape it as \" never leave it raw
-4. No trailing commas after the last item in any array or object
-5. Every opened bracket [ or {{ must be closed ] or }}
-6. Output must start with [ and end with ] — nothing outside
-
-Do a final mental parse of your output before sending.
-If it would crash Python's json.loads() → fix it first.
-Your output must be valid JSON. No exceptions.
+- ALL keys and values must use double quotes
+- No trailing commas
+- No special characters or symbols in values
+- Every opened bracket must have a matching closing bracket
+- Output must start with {{ and end with }}
+- Must be valid JSON that passes json.loads()
 </json_safety_contract>
 
+Respond ONLY in this exact JSON format:
+{{
+  "idea_title": "short punchy name for the idea",
+  "one_line_pitch": "one sentence — what it does and who it helps",
+  "founder_name": "founder name",
+  "founder_role": "founder role like CEO or Founder",
+  "founder_email": "not available",
+  "founder_phone": "not available",
+  "founder_website": "not available",
+
+  "idea_summary": "2 lines max — what the company does",
+  "solution_explanation": "2 lines max — how the idea solves the problem",
+
+  "trend_1": "trend title",
+  "trend_1_detail": "one line detail",
+  "trend_2": "trend title",
+  "trend_2_detail": "one line detail",
+  "trend_3": "trend title",
+  "trend_3_detail": "one line detail",
+  "trend_4": "trend title",
+  "trend_4_detail": "one line detail",
+
+  "stat_1_number": "a real market number",
+  "stat_1_label": "what this number means",
+  "stat_2_number": "another number",
+  "stat_2_label": "what this number means",
+  "stat_3_number": "another number",
+  "stat_3_label": "what this number means",
+
+  "market_size": "TAM number like 4.2B",
+  "market_size_label": "what this market size represents",
+
+  "competitor_1": "real competitor name",
+  "comp_1_feature": "their key feature",
+  "comp_1_value": "their value prop",
+  "comp_1_price": "their pricing",
+  "comp_1_trial": "Yes or No",
+  "comp_1_level": "Low or High",
+  "comp_1_share": "market share if known",
+
+  "competitor_2": "real competitor name",
+  "comp_2_feature": "their key feature",
+  "comp_2_value": "their value prop",
+  "comp_2_price": "their pricing",
+  "comp_2_trial": "Yes or No",
+  "comp_2_level": "Low or High",
+  "comp_2_share": "market share if known",
+
+  "competitor_3": "real competitor name",
+  "comp_3_feature": "their key feature",
+  "comp_3_value": "their value prop",
+  "comp_3_price": "their pricing",
+  "comp_3_trial": "Yes or No",
+  "comp_3_level": "Low or High",
+  "comp_3_share": "market share if known",
+
+  "competitor_4": "real competitor name",
+  "comp_4_feature": "their key feature",
+  "comp_4_value": "their value prop",
+  "comp_4_price": "their pricing",
+  "comp_4_trial": "Yes or No",
+  "comp_4_level": "Low or High",
+  "comp_4_share": "market share if known",
+
+  "competitor_5": "real competitor name",
+  "comp_5_feature": "their key feature",
+  "comp_5_value": "their value prop",
+  "comp_5_price": "their pricing",
+  "comp_5_trial": "Yes or No",
+  "comp_5_level": "Low or High",
+  "comp_5_share": "market share if known",
+
+  "competitor_6": "real competitor name",
+  "comp_6_feature": "their key feature",
+  "comp_6_value": "their value prop",
+  "comp_6_price": "their pricing",
+  "comp_6_trial": "Yes or No",
+  "comp_6_level": "Low or High",
+  "comp_6_share": "market share if known",
+
+  "competitor_7": "real competitor name",
+  "comp_7_feature": "their key feature",
+  "comp_7_value": "their value prop",
+  "comp_7_price": "their pricing",
+  "comp_7_trial": "Yes or No",
+  "comp_7_level": "Low or High",
+  "comp_7_share": "market share if known",
+
+  "feature_1": "feature name",
+  "feature_1_detail": "one line detail",
+  "feature_2": "feature name",
+  "feature_2_detail": "one line detail",
+  "feature_3": "feature name",
+  "feature_3_detail": "one line detail",
+  "feature_4": "feature name",
+  "feature_4_detail": "one line detail",
+  "feature_5": "feature name",
+  "feature_5_detail": "one line detail",
+  "feature_6": "feature name",
+  "feature_6_detail": "one line detail",
+
+  "ask_1": "first ask point",
+  "ask_2": "second ask point",
+  "ask_3": "third ask point",
+  "ask_4": "fourth ask point",
+  "ask_5": "fifth ask point",
+  "ask_6": "sixth ask point",
+  "ask_7": "seventh ask point",
+  "ask_8": "eighth ask point",
+
+  "founder_role": "CEO or Founder",
+
+  "tam": "total addressable market number",
+  "tam_description": "one line what TAM means for this idea",
+  "sam": "serviceable addressable market number",
+  "sam_description": "one line what SAM means for this idea",
+  "som": "serviceable obtainable market number",
+  "som_description": "one line what SOM means for this idea"
+}}
 </instructions>
 """

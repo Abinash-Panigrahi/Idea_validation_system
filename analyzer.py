@@ -17,6 +17,7 @@ from prompts import (
 )
 from websearch import get_search_context
 from prompts import get_pitch_deck_prompt
+import re
 
 load_dotenv()
 
@@ -161,16 +162,15 @@ def generate_readiness_tips(analysis: dict, readiness_type: str ,search_context:
 
     return result
 
-def generate_pitch_slides(analysis: dict) -> list:
-    import re
+def generate_pitch_slides(analysis: dict) -> dict:
     prompt = get_pitch_deck_prompt(analysis)
     
     for attempt in range(3):
         raw_response = call_gemini(prompt, max_output_tokens=4096)
         
         # Extract only the JSON array
-        start = raw_response.find("[")
-        end = raw_response.rfind("]") + 1
+        start = raw_response.find("{")
+        end = raw_response.rfind("}") + 1
         if start == -1 or end == 0:
             print(f"⚠️ No JSON array found on attempt {attempt+1}")
             continue
@@ -195,4 +195,4 @@ def generate_pitch_slides(analysis: dict) -> list:
             continue
     
     print("❌ PPT generation failed after 3 attempts.")
-    return []
+    return {}
