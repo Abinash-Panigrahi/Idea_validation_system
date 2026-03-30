@@ -1086,6 +1086,8 @@ elif st.session_state.step == 4:
                 if st.button("🎯 Generate Pitch Deck", use_container_width=True):
                     with st.spinner("⏳ Building your pitch deck..."):
                         slides_data = generate_pitch_slides(st.session_state.analysis)
+                        official_name = st.session_state.founder_data.get("founder_name", "")
+                        slides_data["founder_name"] = official_name
                         ppt_bytes = generate_ppt(slides_data)
                         st.session_state.ppt_bytes = ppt_bytes
                         st.rerun()

@@ -166,8 +166,9 @@ def generate_pitch_slides(analysis: dict) -> dict:
     prompt = get_pitch_deck_prompt(analysis)
     
     for attempt in range(3):
-        raw_response = call_gemini(prompt, max_output_tokens=4096)
-        
+        raw_response = call_gemini(prompt, max_output_tokens=8192)
+        print(f"Raw response preview: {raw_response[:200]}")
+
         # Extract only the JSON array
         start = raw_response.find("{")
         end = raw_response.rfind("}") + 1

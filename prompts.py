@@ -870,7 +870,7 @@ def get_pitch_deck_prompt(analysis: dict) -> str:
         "support_required": analysis.get("support_required", {}),
         "overall": analysis.get("overall", {}),
         "founder_profile": analysis.get("founder_profile", {}),
-        "search_context": analysis.get("search_context", "")
+        "search_context": str(analysis.get("search_context", ""))[:2000]
     }
 
     return f"""
