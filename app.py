@@ -16,6 +16,7 @@ from report import save_json, save_markdown
 from database import save_analysis
 from websearch import get_search_context
 from ppt import generate_ppt
+from analyzer import generate_html_pitch_deck
 
 
 
@@ -1070,29 +1071,50 @@ elif st.session_state.step == 4:
                 label="📦 Download JSON",
                 data=json_content,
                 file_name="analysis.json",
-                mime="application/json",
-                use_container_width=True
+                mime="application/json"
             )
         with col2:
             st.download_button(
                 label="📄 Download Report",
                 data=md_content,
                 file_name="report.md",
-                mime="text/markdown",
-                use_container_width=True
+                mime="text/markdown"
             )
         with col3:
-            if "ppt_bytes" not in st.session_state:
-                if st.button("🎯 Generate Pitch Deck", use_container_width=True):
-                    with st.spinner("⏳ Building your pitch deck..."):
-                        slides_data = generate_pitch_slides(st.session_state.analysis)
-                        official_name = st.session_state.founder_data.get("founder_name", "")
-                        slides_data["founder_name"] = official_name
-                        ppt_bytes = generate_ppt(slides_data)
-                        st.session_state.ppt_bytes = ppt_bytes
-                        st.rerun()
-                
-            else:
+            ppt_mode = st.selectbox(
+                "🎨 Pitch Deck Style:",
+                ["Template (Fixed)", "AI Generated (HTML)"],
+                key="ppt_mode"
+            )
+
+            # Check if current mode already generated
+            mode_key = "ppt_bytes" if ppt_mode == "Template (Fixed)" else "html_deck"
+            already_generated = mode_key in st.session_state
+
+            # Both modes generated — lock
+            both_done = "ppt_bytes" in st.session_state and "html_deck" in st.session_state
+
+            if not both_done:
+                if not already_generated:
+                    if st.button("🎯 Generate Pitch Deck", use_container_width=True):
+                        with st.spinner("⏳ Building your pitch deck..."):
+                            if ppt_mode == "Template (Fixed)":
+                                slide_data = generate_pitch_slides(st.session_state.analysis)
+                                official_name = st.session_state.founder_data.get("founder_name", "")
+                                slide_data["founder_name"] = official_name
+                                ppt_bytes = generate_ppt(slide_data)
+                                st.session_state.ppt_bytes = ppt_bytes
+                            else:
+                                html_deck = generate_html_pitch_deck(st.session_state.analysis)
+                                if html_deck.startswith("<html><body><h1>Generation failed"):
+                                    st.error("⚠️ AI is busy. Please try again in a moment.")
+                                    st.stop()
+                                st.session_state.html_deck = html_deck
+                            st.rerun()
+                else:
+                    st.success("✅ Already generated for this style!")
+
+            if "ppt_bytes" in st.session_state and ppt_mode == "Template (Fixed)":
                 st.download_button(
                     label="⬇️ Download Pitch Deck (.pptx)",
                     data=st.session_state.ppt_bytes,
@@ -1100,7 +1122,18 @@ elif st.session_state.step == 4:
                     mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
                     use_container_width=True
                 )
-        st.divider()
+
+            if "html_deck" in st.session_state and ppt_mode == "AI Generated (HTML)":
+                st.download_button(
+                    label="⬇️ Download Pitch Deck (.html)",
+                    data=st.session_state.html_deck,
+                    file_name="pitch_deck.html",
+                    mime="text/html",
+                    use_container_width=True
+                )
+
+            if both_done:
+                st.info("✅ Both styles generated. Restart to regenerate.")
 
         # ─── Start Over ───────────────────────────────────────────────────
         if st.button("🔄 Start Over"):

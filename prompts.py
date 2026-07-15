@@ -1019,3 +1019,83 @@ Respond ONLY in this exact JSON format:
 }}
 </instructions>
 """
+
+def get_html_pitch_deck_prompt(analysis: dict) -> str:
+    import json
+
+    relevant = {
+        "founder_name": analysis.get("founder_name"),
+        "idea_summary": analysis.get("idea_summary"),
+        "problem_statement": analysis.get("problem_statement", {}),
+        "proposed_solution": analysis.get("proposed_solution", {}),
+        "core_innovation": analysis.get("core_innovation", {}),
+        "market_landscape": analysis.get("market_landscape", {}),
+        "scores": analysis.get("scores", {}),
+        "tech_stack": analysis.get("tech_stack", {}),
+        "support_required": analysis.get("support_required", {}),
+        "overall": analysis.get("overall", {}),
+        "founder_profile": analysis.get("founder_profile", {}),
+        "search_context": str(analysis.get("search_context", ""))[:2000]
+    }
+
+    return f"""
+<role>
+You are a world class pitch deck designer and startup expert.
+</role>
+
+<analysis>
+{json.dumps(relevant, indent=2, ensure_ascii=True)}
+</analysis>
+
+<instructions>
+Generate a complete investor-ready pitch deck as a single HTML file.
+
+DESIGN RULES — MUST FOLLOW:
+- Every generation must have a COMPLETELY unique design — different layout, colors, typography every time
+- Use modern CSS techniques — glassmorphism, gradients, bold typography, asymmetric layouts
+- Each slide must be 100vw x 100vh
+- Import a unique Google Font pair every time — never use default fonts
+- Make it look like a premium $10,000 agency-designed pitch deck
+- Use creative slide layouts — not just centered text every time
+- Add subtle CSS animations where appropriate
+- Page break after every slide for PDF printing
+- NEVER set overflow:hidden on body or html — this hides all slides except the first
+- body and html must have overflow:visible or overflow:auto
+- Each slide scrolls naturally — do not use JavaScript slide navigation
+- Use only standard ASCII characters — never Unicode bullets or special chars
+- For bullet points use plain HTML list items with CSS styling only
+- body must have overflow-y: scroll — never overflow: hidden
+- Do NOT use any JavaScript for slide navigation or scrolling
+- NEVER use a single solid color for the entire background of any slide
+- Every slide must use gradients, geometric shapes, or layered design elements
+- Use contrasting sections within each slide — split layouts, colored panels, accent blocks
+- Add visual hierarchy — large bold headlines, colored accent bars, card-based content blocks
+- Each slide must look visually distinct from the previous one
+- Think agency-level design — not a plain colored rectangle with text
+- Every slide section must have min-height: 100vh and overflow: hidden
+- All content inside a slide must fit within the viewport — never overflow to next slide
+- Use font-size: clamp() for responsive text sizing that auto-fits content
+- If content is too much for one slide — split into two separate slide sections
+- Never let text or cards bleed across the slide boundary line
+- No borders, lines, or decorative elements should appear at the bottom edge of any slide
+- Each slide must have padding-bottom: 60px minimum to prevent content touching the edge
+
+DATA RULES — CRITICAL:
+- Use ONLY data that exists in the analysis JSON
+- If a field is empty, null, or "not available" → DO NOT show it at all — not the label, not the value, nothing
+- Never show placeholder text like "[Your Email Here]" or "N/A" or "not specified"
+- Use real competitor names from search_context
+- Use real market numbers from search_context — never write "billions" when you have exact numbers
+- Every bullet point must be real content — never generic filler text
+- Use ONLY plain HTML <li> tags for all bullet points
+- Never use Unicode symbols, emoji, or special bullet characters like â€¢ or â™¦
+- Style all bullets using CSS list-style-type only
+
+OUTPUT RULES:
+- Return ONLY raw HTML starting with <!DOCTYPE html>
+- No markdown, no backticks, no explanation outside HTML
+- Must work perfectly in browser and print to PDF cleanly
+- @media print must include: .slide {{ page-break-after: always; }}
+- CSS must include: -webkit-print-color-adjust: exact; print-color-adjust: exact;
+</instructions>
+"""

@@ -5,32 +5,31 @@ To switch to another LLM — only change this file.
 """
 
 import os
+import re
 import json
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 from prompts import (
     get_analysis_prompt,
     get_validate_input_prompt,
     get_grade_output_prompt,
     get_adaptive_question_prompt,
-    get_readiness_tips_prompt
+    get_readiness_tips_prompt,
+    get_pitch_deck_prompt,
+    get_html_pitch_deck_prompt
 )
 from websearch import get_search_context
-from prompts import get_pitch_deck_prompt
-import re
 
 load_dotenv()
 
 # ─── Client Setup ───────────────────────────────────────────────────────────
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY not found. Please set it in your .env file.")
 
-genai.configure(api_key=GEMINI_API_KEY)
-
-model = genai.GenerativeModel("gemini-2.5-flash")
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 
 # ─── Helper Functions ────────────────────────────────────────────────────────
@@ -54,23 +53,33 @@ def clean_json(raw: str) -> str:
 
 
 def call_gemini(prompt: str, max_output_tokens: int = 2048) -> str:
-    """
-    Core function — every other function calls this.
-    Sends prompt to Gemini and returns raw response text.
-    """
     try:
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
                 max_output_tokens=max_output_tokens,
                 temperature=0.0,
                 response_mime_type="application/json"
             )
         )
         return response.text
-
     except Exception as e:
-        raise Exception(f"Gemini API call failed: {str(e)}")
+        return json.dumps({"error": f"Gemini API call failed: {str(e)}"})
+    
+def call_gemini_html(prompt: str) -> str:
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                max_output_tokens=16000,
+                temperature=0.7
+            )
+        )
+        return response.text
+    except Exception as e:
+        return f"<html><body><h1>Error: {str(e)}</h1></body></html>"
     
 
 def validate_input(idea: str) -> dict:
@@ -82,11 +91,17 @@ def validate_input(idea: str) -> dict:
     except json.JSONDecodeError as e:
         print(f"\n⚠️ AI Formatting Error: {e}")
         result = {"status": "INVALID", "reason": "AI formatting failed"}
+    
+    # Safety check — if status key missing
+    if "status" not in result:
+        result["status"] = "VALID"
+    
     return result
 
 def generate_single_question(idea: str, founder_name: str, founder_data: dict, history: list ,search_context: dict = None) -> str:
     prompt = get_adaptive_question_prompt(idea, founder_name, founder_data, history ,search_context)
     raw_response = call_gemini(prompt, max_output_tokens=4096)
+    print(f"DEBUG question raw: {raw_response[:300]}")
     cleaned = clean_json(raw_response)
     try:
         result = json.loads(cleaned)
@@ -100,7 +115,7 @@ def analyze_idea(idea: str, founder_name: str, founder_data: dict, followup_qa: 
     if search_context is None:
         search_context = get_search_context(idea ,founder_data)
     prompt = get_analysis_prompt(idea, founder_name, founder_data, followup_qa, search_context)
-    raw_response = call_gemini(prompt, max_output_tokens=8192)
+    raw_response = call_gemini_html(prompt)
     cleaned = clean_json(raw_response)
     try:
         result = json.loads(cleaned)
@@ -197,3 +212,24 @@ def generate_pitch_slides(analysis: dict) -> dict:
     
     print("❌ PPT generation failed after 3 attempts.")
     return {}
+
+def generate_html_pitch_deck(analysis: dict) -> str:
+    prompt = get_html_pitch_deck_prompt(analysis)
+
+    for attempt in range(3):
+        raw_response = call_gemini_html(prompt)
+
+        if "<!DOCTYPE html>" in raw_response or "<html" in raw_response:
+            if "503" in raw_response or "error" in raw_response.lower()[:100]:
+                print(f"⚠️ API Error on attempt {attempt+1}")
+                continue
+            start = raw_response.find("<!DOCTYPE html>")
+            if start == -1:
+                start = raw_response.find("<html")
+            print(f"✅ HTML pitch deck generated on attempt {attempt+1}")
+            return raw_response[start:]
+
+        print(f"⚠️ No HTML found on attempt {attempt+1}")
+
+    print("❌ HTML pitch deck generation failed after 3 attempts.")
+    return "<html><body><h1>Generation failed. Please try again.</h1></body></html>"
